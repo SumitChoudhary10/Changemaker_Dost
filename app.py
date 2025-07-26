@@ -20,7 +20,7 @@ try:
     index = faiss.read_index("ashoka_index.faiss")
     with open("text_chunks.pkl", "rb") as f:
         text_chunks = pickle.load(f)
-    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    embedding_model = SentenceTransformer('sentence-transformers/paraphrase-albert-small-v2')
     api_key = os.environ.get('GOOGLE_API_KEY')
     if not api_key:
         raise ValueError("GOOGLE_API_KEY not found in .env file!")

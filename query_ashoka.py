@@ -20,7 +20,7 @@ with open("text_chunks.pkl", "rb") as f:
     text_chunks = pickle.load(f)
 
 print("Loading the embedding model...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('sentence-transformers/paraphrase-albert-small-v2')
 
 
 def search(query, k=4):

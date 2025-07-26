@@ -17,9 +17,9 @@ with open(CLEANED_TEXT_PATH, "r", encoding="utf-8") as f:
 text_chunks = [chunk.strip() for chunk in text.split('\n\n') if len(chunk.strip()) > 100]
 # print(f"Text split into {len(text_chunks)} chunks.")
 
-# Load a pre-trained model. 'all-MiniLM-L6-v2' is fast and effective.
+
 # print("Loading the embedding model...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('sentence-transformers/paraphrase-albert-small-v2')
 
 print("Creating embeddings for text chunks... (This may take a moment)")
 embeddings = model.encode(text_chunks, show_progress_bar=True)
