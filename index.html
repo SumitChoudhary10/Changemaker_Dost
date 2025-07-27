@@ -35,6 +35,7 @@
             font-size: 0.8rem;
             color: #888;
         }
+        /* -- Basic styling for the chatbot button and header -- */
         df-messenger {
           --df-messenger-bot-message: #f0f4f7;
           --df-messenger-button-titlebar-color: #005a9c;
@@ -51,7 +52,6 @@
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
     <df-messenger
       chat-title="Changemaker Dost"
-      chat-subtitle="I'm your Changemaker Dost. You can ask me anything about Ashoka Changemaker, or we can start your CMI assessment."
       agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
       language-code="en"
       location="asia-south1"
@@ -61,6 +61,37 @@
     <div class="footer">
         <p>Powered by Dialogflow and Google AI</p>
     </div>
+
+    <!-- This new script gives us direct control over the welcome message -->
+    <script>
+      const dfMessenger = document.querySelector('df-messenger');
+
+      // Listen for the event that signals the chat widget is ready
+      dfMessenger.addEventListener('df-messenger-loaded', function (event) {
+        // Create the custom welcome message with buttons
+        const welcomePayload = [
+            {
+              "type": "info",
+              "title": "I’m your Changemaker Dost.",
+              "subtitle": "You can ask me anything about Ashoka, or we can start your CMI assessment.",
+            },
+            {
+              "type": "chips",
+              "options": [
+                {
+                  "text": "Want to know about Ashoka young changemakers"
+                },
+                {
+                  "text": "Start CMI assessment"
+                }
+              ]
+            }
+          ];
+        
+        // Use the official renderCustomCard method to display our welcome message
+        dfMessenger.renderCustomCard(welcomePayload);
+      });
+    </script>
 
 </body>
 </html>
