@@ -5,17 +5,13 @@ import numpy as np
 import google.generativeai as genai
 import os
 
-
-# IMPORTANT: Replace API_KEY if needed
 API_KEY = 'AIzaSyB0YSeFv6ttS2VSLP7yuzJZkOccB20F1ak' 
 genai.configure(api_key=API_KEY)
 
 
 
-# print("Loading the FAISS index...")
 index = faiss.read_index("ashoka_index.faiss")
 
-# print("Loading the text chunks...")
 with open("text_chunks.pkl", "rb") as f:
     text_chunks = pickle.load(f)
 
@@ -47,8 +43,6 @@ def generate_answer(query, context_chunks):
     """
     
     try:
-        # --- THIS IS THE ONLY LINE THAT HAS CHANGED ---
-        # Using a newer, recommended model name.
         llm = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         response = llm.generate_content(prompt)
