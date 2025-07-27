@@ -62,13 +62,13 @@
         <p>Powered by Dialogflow and Google AI</p>
     </div>
 
-    <!-- This new script gives us direct control over the welcome message -->
+    <!-- This new script provides full control over the welcome experience and styling -->
     <script>
       const dfMessenger = document.querySelector('df-messenger');
 
-      // Listen for the event that signals the chat widget is ready
       dfMessenger.addEventListener('df-messenger-loaded', function (event) {
-        // Create the custom welcome message with buttons
+        
+        // Define the payload for the welcome card with text and buttons
         const welcomePayload = [
             {
               "type": "info",
@@ -88,8 +88,33 @@
             }
           ];
         
-        // Use the official renderCustomCard method to display our welcome message
+        // Use renderCustomCard to display our welcome message in a card
         dfMessenger.renderCustomCard(welcomePayload);
+
+        // --- This new part handles all the custom styling ---
+        try {
+            const chatWrapper = dfMessenger.shadowRoot.querySelector('df-messenger-chat');
+            const style = document.createElement('style');
+
+            // This CSS code will be injected into the chatbot
+            style.textContent = `
+                /* Removes the border from the header */
+                .header {
+                    border: none !important;
+                }
+                /* This targets the message list and pushes the first card up */
+                #messageList .message-list-wrapper {
+                    justify-content: flex-start; /* Aligns items to the top */
+                    padding-top: 25%; /* Pushes the card down from the top */
+                }
+            `;
+
+            // Append the new styles to the chatbot's shadow root
+            chatWrapper.shadowRoot.appendChild(style);
+
+        } catch(e) {
+            console.error("Could not apply custom styles:", e);
+        }
       });
     </script>
 
