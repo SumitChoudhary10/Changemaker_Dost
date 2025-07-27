@@ -22,7 +22,7 @@
         }
         h1 {
             font-size: 2.5rem;
-            color: #005a9c; /* A professional blue */
+            color: #005a9c;
         }
         p {
             font-size: 1.1rem;
@@ -35,6 +35,10 @@
             font-size: 0.8rem;
             color: #888;
         }
+        df-messenger {
+          --df-messenger-bot-message: #f0f4f7;
+          --df-messenger-button-titlebar-color: #005a9c;
+        }
     </style>
 </head>
 <body>
@@ -44,15 +48,15 @@
         <p>This is a live demo of the AI-powered chatbot. Click the chat icon in the bottom-right corner to start a conversation.</p>
     </div>
 
-    <!-- This is the code from Dialogflow with the CORRECTED agent-id -->
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
     <df-messenger
       chat-title="Changemaker Dost"
+      chat-subtitle="I'm your Changemaker Dost. You can ask me anything about Ashoka Changemaker, or we can start your CMI assessment."
       agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
       language-code="en"
       location="asia-south1"
+      expand="true"
     ></df-messenger>
-    <!-- End of Dialogflow code -->
 
     <div class="footer">
         <p>Powered by Dialogflow and Google AI</p>
