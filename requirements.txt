@@ -5,3 +5,4 @@ numpy
 google-generativeai
 python-dotenv
 spacy
+firebase-admin
