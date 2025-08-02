@@ -16,12 +16,22 @@ from datetime import datetime
 # Load environment variables from .env file
 load_dotenv()
 
-# --- Firebase Initialization ---
+# --- Firebase Initialization (Corrected for Server Environments) ---
 print("Initializing Firebase...")
 try:
+    # Load the service account key
     cred = credentials.Certificate("serviceAccountKey.json")
+    
+    # Extract the project ID from the key file for more stable authentication
+    with open("serviceAccountKey.json") as f:
+        service_account_info = json.load(f)
+        project_id = service_account_info.get('project_id')
+
+    # Check if the app is already initialized to prevent errors during hot-reloads
     if not firebase_admin._apps:
-        firebase_admin.initialize_app(cred)
+        firebase_admin.initialize_app(cred, {
+            'projectId': project_id,
+        })
     db = firestore.client()
     print("Firebase initialized successfully.")
 except Exception as e:
@@ -104,6 +114,8 @@ def save_assessment_to_firestore(session_id, results):
         print(f"Successfully saved assessment for user {user_id}")
     except Exception as e:
         print(f"Error saving to Firestore: {e}")
+        # Re-raise the exception so the main webhook handler can catch it
+        raise e
 
 def fetch_latest_assessment(session_id):
     """Fetches the most recent assessment for a user from Firestore."""
