@@ -21,7 +21,9 @@ print("Initializing Firebase...")
 try:
     # Use the secret key file you downloaded
     cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+    # Check if the app is already initialized to prevent errors during hot-reloads
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
     db = firestore.client()
     print("Firebase initialized successfully.")
 except Exception as e:
@@ -50,26 +52,33 @@ QUESTION_BANK = {
 app = FastAPI()
 
 # --- Load Ashoka Q&A Data at Startup ---
-# ... (The Ashoka Q&A functions search() and generate_full_answer() are unchanged) ...
+# We define these functions but they will be populated with the actual logic later
+# to keep the immersive focused on the CMI part.
 def search(query, k=3):
-    # This function is unchanged
+    # Placeholder for search logic
     pass
 def generate_full_answer(query, context_chunks):
-    # This function is unchanged
+    # Placeholder for answer generation logic
     pass
 
 # --- CMI Analysis and Data Storage ---
 def analyze_cmi_response(category, question, answer):
-    # This function is unchanged
-    pass
+    """Uses the AI to analyze the user's CMI answer and return a score."""
+    prompt = f"You are an expert in evaluating changemaking skills (Empathy, Teamwork, Leadership, Initiative). The user was asked a question to assess their '{category}':\nQuestion: \"{question}\"\nThe user responded:\nAnswer: \"{answer}\"\nAnalyze their response. Provide a score from 1 to 10 for their '{category}' skill and a one-sentence justification. Respond ONLY with a valid JSON object like: {{\"score\": <score_number>, \"justification\": \"<one_sentence_justification>\"}}"
+    model = genai.GenerativeModel(GENERATIVE_MODEL_NAME)
+    response = model.generate_content(prompt)
+    try:
+        cleaned_response = response.text.strip().replace("```json", "").replace("```", "")
+        return json.loads(cleaned_response)
+    except Exception as e:
+        print(f"Error decoding AI analysis: {e}")
+        return {"score": 0, "justification": "Could not analyze response."}
+
 
 def save_assessment_to_firestore(session_id, results):
     """Saves the completed assessment results to Firestore."""
     try:
-        # We use a part of the Dialogflow session ID as a simple user ID for now
         user_id = session_id.split('/')[-1]
-        
-        # Create a new document in the 'assessments' collection
         doc_ref = db.collection('assessments').document()
         doc_ref.set({
             'userId': user_id,
@@ -83,6 +92,13 @@ def save_assessment_to_firestore(session_id, results):
     except Exception as e:
         print(f"Error saving to Firestore: {e}")
 
+def get_params_from_context(request, context_name_suffix):
+    """Helper to extract parameters from a specific incoming context."""
+    contexts = request['queryResult']['outputContexts']
+    for context in contexts:
+        if context_name_suffix in context['name'] and 'parameters' in context:
+            return context['parameters']
+    return {}
 
 # --- API Endpoints ---
 @app.post("/dialogflow-webhook")
@@ -94,13 +110,12 @@ async def dialogflow_webhook(request: dict):
 
         # --- Router for Ashoka Q&A ---
         if "ask_about_ashoka" in intent_name:
-            # ... (This part is unchanged) ...
-            pass
+            # This part can be filled in with the previous Q&A logic
+            return JSONResponse(content={"fulfillmentText": "This is where the Ashoka Q&A response would go."})
 
         # --- Router for CMI Assessment ---
         elif intent_name == "cmi_assessment_START":
             question = random.choice(QUESTION_BANK["empathy"])
-            # We will now pass an empty results object through the contexts
             initial_results = {}
             return JSONResponse(content={
                 "fulfillmentText": f"Great! Let's start with Empathy.\n\n{question}",
@@ -108,9 +123,11 @@ async def dialogflow_webhook(request: dict):
             })
 
         elif intent_name == "cmi_assessment_empathy_RESPONSE":
-            # ... (Code to get user_answer and current_question is unchanged) ...
-            # Get the results object from the incoming context
-            results = {} # Get results from context
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_empathy_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+            
             analysis = analyze_cmi_response("Empathy", current_question, user_answer)
             results['empathy'] = analysis
             
@@ -121,8 +138,11 @@ async def dialogflow_webhook(request: dict):
             })
 
         elif intent_name == "cmi_assessment_teamwork_RESPONSE":
-            # ... (Code to get user_answer and current_question is unchanged) ...
-            results = {} # Get results from context
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_teamwork_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+
             analysis = analyze_cmi_response("Teamwork", current_question, user_answer)
             results['teamwork'] = analysis
 
@@ -133,8 +153,11 @@ async def dialogflow_webhook(request: dict):
             })
 
         elif intent_name == "cmi_assessment_leadership_RESPONSE":
-            # ... (Code to get user_answer and current_question is unchanged) ...
-            results = {} # Get results from context
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_leadership_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+
             analysis = analyze_cmi_response("Leadership", current_question, user_answer)
             results['leadership'] = analysis
 
@@ -145,12 +168,14 @@ async def dialogflow_webhook(request: dict):
             })
 
         elif intent_name == "cmi_assessment_initiative_RESPONSE":
-            # ... (Code to get user_answer and current_question is unchanged) ...
-            results = {} # Get results from context
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_initiative_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+
             analysis = analyze_cmi_response("Initiative", current_question, user_answer)
             results['initiative'] = analysis
             
-            # Now we save the final results to the database
             save_assessment_to_firestore(session_id, results)
 
             return JSONResponse(content={
@@ -164,4 +189,6 @@ async def dialogflow_webhook(request: dict):
         print(f"Error in main webhook: {e}")
         return JSONResponse(content={"fulfillmentText": "Sorry, an error occurred on my end."})
 
-# ... (The root endpoint @app.get("/") is unchanged) ...
+@app.get("/")
+def read_root():
+    return {"message": "Ashoka Bot Backend is running!"}
