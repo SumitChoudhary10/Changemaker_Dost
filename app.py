@@ -16,17 +16,19 @@ from datetime import datetime
 # Load environment variables from .env file
 load_dotenv()
 
-# --- Firebase Initialization (Using Standard Google Cloud Method) ---
+# --- Firebase Initialization (Final, Most Robust Method) ---
 print("Initializing Firebase...")
 try:
-    # This is the standard way to provide credentials in a server environment.
-    # It tells the library to find the key file automatically.
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "serviceAccountKey.json"
+    # Load the service account key file directly into a dictionary
+    with open("serviceAccountKey.json") as f:
+        service_account_info = json.load(f)
     
-    # We no longer need to pass the credential object manually.
-    # The library will find it using the environment variable.
+    # Pass the dictionary directly to the credentials object
+    cred = credentials.Certificate(service_account_info)
+    
+    # Check if the app is already initialized to prevent errors during hot-reloads
     if not firebase_admin._apps:
-        firebase_admin.initialize_app()
+        firebase_admin.initialize_app(cred)
         
     db = firestore.client()
     print("Firebase initialized successfully.")
