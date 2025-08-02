@@ -1,5 +1,6 @@
 import os
-from fastapi import FastAPI, JSONResponse
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse 
 from pydantic import BaseModel
 import faiss
 import pickle
@@ -204,4 +205,3 @@ async def dialogflow_webhook(request: dict):
 async def read_root():
     """A simple health check endpoint."""
     return {"message": "Ashoka Bot Backend is running!"}
-
