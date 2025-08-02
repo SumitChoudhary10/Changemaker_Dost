@@ -49,11 +49,33 @@ QUESTION_BANK = {
 # --- Initialize the FastAPI App ---
 app = FastAPI()
 
-# --- Placeholder for Ashoka Q&A Data Loading ---
-# In a real app, you would load your FAISS index here.
-# For this immersive, we focus on the CMI + DB logic.
+# --- Load Ashoka Q&A Data at Startup ---
+print("Loading FAISS index and text chunks for Ashoka Q&A...")
+try:
+    index = faiss.read_index("ashoka_index.faiss")
+    with open("text_chunks.pkl", "rb") as f:
+        text_chunks = pickle.load(f)
+    print("Ashoka Q&A data loaded successfully.")
+except Exception as e:
+    print(f"An error occurred during startup loading Ashoka data: {e}")
+
 
 # --- Core Functions ---
+def search(query, k=3):
+    """Finds the most relevant text chunks for a given query."""
+    query_embedding_dict = genai.embed_content(model=EMBEDDING_MODEL_NAME, content=query, task_type="RETRIEVAL_QUERY")
+    query_embedding = np.array([query_embedding_dict['embedding']]).astype('float32')
+    D, I = index.search(query_embedding, k)
+    return [text_chunks[i] for i in I[0]]
+
+def generate_full_answer(query, context_chunks):
+    """Generates a complete answer for the Ashoka Q&A webhook."""
+    context = "\n\n".join(context_chunks)
+    prompt = f"You are 'Changemaker Dost', a friendly AI assistant. Answer the user's question about Ashoka. Prioritize information from the Official Context. If the answer isn't there, use your general knowledge. Never say 'Based on the provided text'.\n\nOfficial Context: --- {context} ---\nUser's Question: {query}\nAnswer:"
+    model = genai.GenerativeModel(GENERATIVE_MODEL_NAME)
+    response = model.generate_content(prompt)
+    return response.text
+
 def analyze_cmi_response(category, question, answer):
     """Uses the AI to analyze the user's CMI answer and return a score."""
     prompt = f"You are an expert in evaluating changemaking skills (Empathy, Teamwork, Leadership, Initiative). The user was asked a question to assess their '{category}':\nQuestion: \"{question}\"\nThe user responded:\nAnswer: \"{answer}\"\nAnalyze their response. Provide a score from 1 to 10 for their '{category}' skill and a one-sentence justification. Respond ONLY with a valid JSON object like: {{\"score\": <score_number>, \"justification\": \"<one_sentence_justification>\"}}"
@@ -87,10 +109,9 @@ def fetch_latest_assessment(session_id):
     """Fetches the most recent assessment for a user from Firestore."""
     try:
         user_id = session_id.split('/')[-1]
-        # Query the collection for documents matching the user_id, order by date descending, and get the latest one.
         query = db.collection('assessments').where('userId', '==', user_id).order_by('assessmentDate', direction=firestore.Query.DESCENDING).limit(1)
         docs = query.stream()
-        latest_doc = next(docs, None) # Get the first document, or None if no results
+        latest_doc = next(docs, None)
         if latest_doc:
             return latest_doc.to_dict()
         else:
@@ -115,8 +136,15 @@ async def dialogflow_webhook(request: dict):
         session_id = request['session']
         print(f"Received intent: {intent_name}")
 
+        # --- Router for Ashoka Q&A ---
+        if "ask_about_ashoka" in intent_name:
+            user_question = request['queryResult']['queryText']
+            relevant_chunks = search(user_question)
+            final_answer = generate_full_answer(user_question, relevant_chunks)
+            return JSONResponse(content={"fulfillmentText": final_answer})
+
         # --- Router for CMI Assessment ---
-        if intent_name == "cmi_assessment_START":
+        elif intent_name == "cmi_assessment_START":
             question = random.choice(QUESTION_BANK["empathy"])
             initial_results = {}
             return JSONResponse(content={
@@ -137,7 +165,31 @@ async def dialogflow_webhook(request: dict):
                 "outputContexts": [{"name": f"{session_id}/contexts/awaiting_cmi_teamwork_response", "lifespanCount": 1, "parameters": {"current_question": question, "results": results}}]
             })
         
-        # ... (Teamwork and Leadership response handlers are similar) ...
+        elif intent_name == "cmi_assessment_teamwork_RESPONSE":
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_teamwork_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+            analysis = analyze_cmi_response("Teamwork", current_question, user_answer)
+            results['teamwork'] = analysis
+            question = random.choice(QUESTION_BANK["leadership"])
+            return JSONResponse(content={
+                "fulfillmentText": f"Interesting. Next, let's reflect on Leadership:\n\n{question}",
+                "outputContexts": [{"name": f"{session_id}/contexts/awaiting_cmi_leadership_response", "lifespanCount": 1, "parameters": {"current_question": question, "results": results}}]
+            })
+
+        elif intent_name == "cmi_assessment_leadership_RESPONSE":
+            user_answer = request['queryResult']['queryText']
+            context_params = get_params_from_context(request, "awaiting_cmi_leadership_response")
+            current_question = context_params.get("current_question", "")
+            results = context_params.get("results", {})
+            analysis = analyze_cmi_response("Leadership", current_question, user_answer)
+            results['leadership'] = analysis
+            question = random.choice(QUESTION_BANK["initiative"])
+            return JSONResponse(content={
+                "fulfillmentText": f"Almost done! Finally, let's talk about Initiative:\n\n{question}",
+                "outputContexts": [{"name": f"{session_id}/contexts/awaiting_cmi_initiative_response", "lifespanCount": 1, "parameters": {"current_question": question, "results": results}}]
+            })
 
         elif intent_name == "cmi_assessment_initiative_RESPONSE":
             user_answer = request['queryResult']['queryText']
@@ -151,18 +203,16 @@ async def dialogflow_webhook(request: dict):
                 "fulfillmentText": "Thank you for completing the CMI reflection! Your results have been saved. You can ask to see your dashboard at any time."
             })
 
-        # --- NEW Router for Dashboard ---
+        # --- Router for Dashboard ---
         elif intent_name == "cmi_show_dashboard":
             assessment_data = fetch_latest_assessment(session_id)
             if assessment_data:
-                # Format the data into a nice text response for the user
                 e = assessment_data.get('empathy', {})
                 t = assessment_data.get('teamwork', {})
                 l = assessment_data.get('leadership', {})
                 i = assessment_data.get('initiative', {})
                 
-                response_text = f"""
-Here are your latest CMI results:
+                response_text = f"""Here are your latest CMI results:
 
 *Empathy:* {e.get('score', 'N/A')}/10
 _{e.get('justification', '')}_
@@ -176,8 +226,7 @@ _{l.get('justification', '')}_
 *Initiative:* {i.get('score', 'N/A')}/10
 _{i.get('justification', '')}_
 
-Remember, this is a reflection tool for your growth!
-                """
+Remember, this is a reflection tool for your growth!"""
                 return JSONResponse(content={"fulfillmentText": response_text.strip()})
             else:
                 return JSONResponse(content={"fulfillmentText": "I couldn't find any completed assessments for you. Would you like to start one now?"})
