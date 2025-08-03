@@ -4,53 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your CMI Dashboard</title>
+    <!-- Google Fonts for a cleaner look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
             margin: 0;
-            padding: 2rem;
+            padding: 1rem;
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            min-height: 100vh;
         }
         .dashboard-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 700px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem;
+            margin-top: 2rem;
         }
         h1 {
-            color: #005a9c;
+            color: #0d6efd;
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
         }
         .skill-card {
-            margin-bottom: 1.5rem;
-            border-left: 4px solid #005a9c;
-            padding-left: 1.5rem;
+            margin-bottom: 2rem;
         }
-        .skill-card h2 {
-            margin: 0 0 0.5rem 0;
-            color: #333;
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
         }
-        .skill-card .score {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #005a9c;
+        .skill-header h2 {
+            margin: 0;
+            color: #212529;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
-        .skill-card .justification {
+        .skill-header .score {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            height: 16px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #0d6efd;
+            border-radius: 8px;
+            width: 0%; /* Will be set by JavaScript */
+            transition: width 0.5s ease-in-out;
+        }
+        .justification {
             font-style: italic;
-            color: #666;
-            margin-top: 0.5rem;
+            color: #6c757d;
+            margin-top: 0.75rem;
+            padding-left: 0.5rem;
+            border-left: 3px solid #dee2e6;
         }
         #loading, #error {
             text-align: center;
             font-size: 1.2rem;
             padding: 2rem;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -60,22 +90,18 @@
         <h1>Your CMI Reflection</h1>
         <div id="results">
             <p id="loading">Loading your results...</p>
-            <p id="error" style="display: none;">Could not load your assessment data. Please check the link or try again later.</p>
-            <!-- Results will be injected here by JavaScript -->
+            <p id="error" style="display: none;">Could not load your assessment data.</p>
         </div>
     </div>
 
     <script>
-        // This script runs when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            // Get the unique assessment ID from the URL
             const params = new URLSearchParams(window.location.search);
             const assessmentId = params.get('id');
 
             const loadingEl = document.getElementById('loading');
             const errorEl = document.getElementById('error');
-            const resultsEl = document.getElementById('results');
-
+            
             if (!assessmentId) {
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
@@ -83,15 +109,9 @@
                 return;
             }
 
-            // Fetch the data from our backend API
-            const apiUrl = `/assessment/${assessmentId}`; // Relative URL to our own server
+            const apiUrl = `/assessment/${assessmentId}`; 
             fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
+                .then(response => response.ok ? response.json() : Promise.reject('Network response was not ok'))
                 .then(data => {
                     loadingEl.style.display = 'none';
                     displayResults(data);
@@ -111,12 +131,22 @@
             skills.forEach(skillName => {
                 const skillData = data[skillName];
                 if (skillData) {
+                    const score = skillData.score || 0;
+                    const justification = skillData.justification || '';
+                    const skillTitle = skillName.charAt(0).toUpperCase() + skillName.slice(1);
+
                     const card = document.createElement('div');
                     card.className = 'skill-card';
+                    // New HTML structure with the progress bar
                     card.innerHTML = `
-                        <h2>${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</h2>
-                        <p class="score">Score: ${skillData.score || 'N/A'}/10</p>
-                        <p class="justification">${skillData.justification || ''}</p>
+                        <div class="skill-header">
+                            <h2>${skillTitle}</h2>
+                            <span class="score">${score}/10</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${score * 10}%"></div>
+                        </div>
+                        <p class="justification">${justification}</p>
                     `;
                     resultsEl.appendChild(card);
                 }
