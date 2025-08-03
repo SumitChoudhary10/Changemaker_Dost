@@ -70,13 +70,30 @@
         <p>Powered by Dialogflow and Google AI</p>
     </div>
 
-    <!-- This script provides full control over the welcome experience and styling -->
+    <!-- This script provides full control over the welcome experience, styling, AND persistent user ID -->
     <script>
       const dfMessenger = document.querySelector('df-messenger');
 
+      // Function to get or create a persistent user ID from browser's local storage
+      function getOrCreateUserId() {
+          let userId = localStorage.getItem('changemakerDost_userId');
+          if (!userId) {
+              // If no ID exists, create a new one (a simple random string)
+              userId = 'user_' + Math.random().toString(36).substring(2, 15);
+              localStorage.setItem('changemakerDost_userId', userId);
+          }
+          return userId;
+      }
+
+      // This event fires once the Dialogflow Messenger widget is ready
       dfMessenger.addEventListener('df-messenger-loaded', function (event) {
         
-        // Define the payload for the welcome card with text and buttons
+        // --- NEW: Set the persistent session ID ---
+        const persistentUserId = getOrCreateUserId();
+        dfMessenger.setAttribute('session-id', persistentUserId);
+        console.log('Persistent User ID set:', persistentUserId);
+        
+        // --- Existing: Define the payload for the welcome card ---
         const welcomePayload = [
             {
               "type": "info",
@@ -99,12 +116,11 @@
         // Use renderCustomCard to display our welcome message in a card
         dfMessenger.renderCustomCard(welcomePayload);
 
-        // --- This part handles all the custom styling ---
+        // --- Existing: Apply custom styling ---
         try {
             const chatWrapper = dfMessenger.shadowRoot.querySelector('df-messenger-chat');
             const style = document.createElement('style');
 
-            // This CSS code will be injected into the chatbot
             style.textContent = `
                 /* Removes the border from the header */
                 .header {
@@ -117,7 +133,6 @@
                 }
             `;
 
-            // Append the new styles to the chatbot's shadow root
             chatWrapper.shadowRoot.appendChild(style);
 
         } catch(e) {

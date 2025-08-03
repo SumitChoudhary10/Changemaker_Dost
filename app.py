@@ -110,9 +110,8 @@ def format_for_firestore(data_dict):
             fields[key] = {"timestampValue": value.isoformat() + "Z"}
     return fields
 
-def save_assessment_via_rest(session_id, results):
-    """Saves the assessment to Firestore using a direct REST API call."""
-    user_id = session_id.split('/')[-1]
+def save_assessment_via_rest(user_id, results):
+    """Saves the assessment to Firestore using the persistent user ID."""
     document_data = {
         'userId': user_id,
         'assessmentDate': datetime.now(),
@@ -165,6 +164,7 @@ async def dialogflow_webhook(request: dict):
     try:
         intent_name = request['queryResult']['intent']['displayName']
         session_id = request['session']
+        user_id = session_id.split('/')[-1]
         
         if "ask_about_ashoka" in intent_name:
             user_question = request['queryResult']['queryText']
@@ -227,7 +227,7 @@ async def dialogflow_webhook(request: dict):
             analysis = analyze_cmi_response("Initiative", current_question, user_answer)
             results['initiative'] = analysis
             
-            assessment_id = save_assessment_via_rest(session_id, results)
+            assessment_id = save_assessment_via_rest(user_id, results)
             dashboard_url = f"https://changemaker-dost-api.onrender.com/dashboard?id={assessment_id}"
             
             # --- THIS IS THE NEW, CLICKABLE LINK RESPONSE ---
@@ -248,10 +248,20 @@ async def dialogflow_webhook(request: dict):
                                         "type": "button",
                                         "icon": {
                                             "type": "open_in_new",
-                                            "color": "#FFFFFF"
+                                            "color": "#FFFFFFC6"
                                         },
                                         "text": "View My Dashboard",
                                         "link": dashboard_url
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type" : "chips",
+                                        "options" : [
+                                            {
+                                                "text" : "Run CMI assessment again"
+                                            }
+                                        ]
                                     }
                                 ]
                             ]
@@ -328,7 +338,7 @@ async def get_user_history(user_id: str):
             print(f"Response Body: {e.response.text}")
         return JSONResponse(content={"error": "Could not fetch user history"}, status_code=500)
     
-    
+
 @app.get("/")
 def read_root():
     return {"message": "Ashoka Bot Backend is running!"}
