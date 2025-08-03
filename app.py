@@ -123,28 +123,38 @@ def save_assessment_via_rest(session_id, results):
     url = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/assessments?key={GOOGLE_API_KEY}"
     payload = {"fields": format_for_firestore(document_data)}
     
-    response = requests.post(url, json=payload)
-    
-    if response.status_code == 200:
-        # Extract the document ID from the response path
+    try:
+        response = requests.post(url, json=payload, timeout=20) # Set a timeout
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        
         doc_path = response.json().get('name', '')
         assessment_id = doc_path.split('/')[-1]
         print(f"Successfully saved assessment {assessment_id} via REST API.")
         return assessment_id
-    else:
-        print(f"Error saving to Firestore via REST API: {response.status_code} - {response.text}")
+    except requests.exceptions.RequestException as e:
+        # This will catch timeouts, connection errors, and bad status codes
+        print(f"Error saving to Firestore via REST API: {e}")
+        if e.response is not None:
+            print(f"Response Body: {e.response.text}")
         raise Exception("Could not save assessment to the database.")
+
 
 def unformat_from_firestore(fields):
     """Converts Firestore's REST API format back to a Python dictionary."""
+    if not fields:
+        return {}
     data = {}
     for key, value_dict in fields.items():
+        if not value_dict:
+            continue
         value_type = list(value_dict.keys())[0]
         if value_type == 'mapValue':
-            data[key] = unformat_from_firestore(value_dict[value_type].get('fields', {}))
+            data[key] = unformat_from_firestore(value_dict[value_type].get('fields'))
         elif value_type == 'integerValue':
             data[key] = int(value_dict[value_type])
-        else:
+        elif value_type == 'timestampValue':
+            data[key] = value_dict[value_type]
+        else: # stringValue, booleanValue, etc.
             data[key] = value_dict[value_type]
     return data
 
