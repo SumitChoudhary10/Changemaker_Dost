@@ -321,7 +321,7 @@ async def dialogflow_webhook(request: dict):
                                         "type": "button",
                                         "icon": {
                                             "type": "open_in_new",
-                                            "color": "#85d9f599"
+                                            "color": "#0d6efd"
                                         },
                                         "text": "View My Dashboard",
                                         "link": dashboard_url

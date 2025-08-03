@@ -235,8 +235,10 @@
             const sortedHistory = [...history].reverse();
 
             const labels = sortedHistory.map(item => {
-                const date = new Date(item.assessmentDate.stringValue);
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                // The backend sends the date as an ISO string. new Date() can parse this directly.
+                const date = new Date(item.assessmentDate);
+                // Format to show Date and Time
+                return date.toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
             });
 
             const empathyData = sortedHistory.map(item => item.empathy.score || 0);
@@ -250,16 +252,22 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Empathy', data: empathyData, borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: false, tension: 0.1 },
-                        { label: 'Teamwork', data: teamworkData, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.2)', fill: false, tension: 0.1 },
-                        { label: 'Leadership', data: leadershipData, borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 0.2)', fill: false, tension: 0.1 },
-                        { label: 'Initiative', data: initiativeData, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: false, tension: 0.1 }
+                        { label: 'Empathy', data: empathyData, borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: false, tension: 0.2 },
+                        { label: 'Teamwork', data: teamworkData, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.2)', fill: false, tension: 0.2 },
+                        { label: 'Leadership', data: leadershipData, borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 0.2)', fill: false, tension: 0.2 },
+                        { label: 'Initiative', data: initiativeData, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: false, tension: 0.2 }
                     ]
                 },
                 options: {
                     responsive: true,
                     scales: {
                         y: { beginAtZero: true, max: 10 }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
                     }
                 }
             });
