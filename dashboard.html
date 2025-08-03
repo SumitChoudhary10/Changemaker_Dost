@@ -84,8 +84,7 @@
             }
 
             // Fetch the data from our backend API
-            // We use a relative URL which will work on Render
-            const apiUrl = `/assessment/${assessmentId}`; 
+            const apiUrl = `/assessment/${assessmentId}`; // Relative URL to our own server
             fetch(apiUrl)
                 .then(response => {
                     if (!response.ok) {
