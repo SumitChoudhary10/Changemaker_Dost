@@ -8,9 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for the growth graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f8f9fa;
             color: #343a40;
             margin: 0;
@@ -22,18 +24,28 @@
         }
         .dashboard-container {
             width: 100%;
-            max-width: 700px;
+            max-width: 750px;
             background: white;
             border-radius: 16px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
             padding: 2.5rem;
             margin-top: 2rem;
+            margin-bottom: 2rem;
         }
         h1 {
             color: #0d6efd;
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1rem;
             font-weight: 700;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-top: 0;
+            margin-bottom: 3rem;
+        }
+        .chart-container {
+            margin-bottom: 3rem;
         }
         .skill-card {
             margin-bottom: 2rem;
@@ -44,13 +56,22 @@
             align-items: center;
             margin-bottom: 0.75rem;
         }
+        .skill-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .skill-title svg {
+            width: 24px;
+            height: 24px;
+            color: #0d6efd;
+        }
         .skill-header h2 {
             margin: 0;
             color: #212529;
             font-size: 1.25rem;
             font-weight: 600;
         }
-        /* New styles for showing score and change */
         .score-display {
             display: flex;
             align-items: baseline;
@@ -67,37 +88,26 @@
             padding: 0.2rem 0.5rem;
             border-radius: 6px;
         }
-        .change.positive {
-            color: #198754;
-            background-color: #d1e7dd;
-        }
-        .change.negative {
-            color: #dc3545;
-            background-color: #f8d7da;
-        }
+        .change.positive { color: #198754; background-color: #d1e7dd; }
+        .change.negative { color: #dc3545; background-color: #f8d7da; }
+        
         .progress-bar-container {
             width: 100%;
             background-color: #e9ecef;
             border-radius: 8px;
             height: 16px;
             overflow: hidden;
-            position: relative; /* Needed for layering bars */
+            position: relative;
         }
         .progress-bar {
             height: 100%;
             border-radius: 8px;
             transition: width 0.5s ease-in-out;
-            position: absolute; /* Bars will layer on top of each other */
+            position: absolute;
         }
-        .latest-bar {
-            background-color: #0d6efd;
-            z-index: 2; /* Ensures latest bar is on top */
-        }
-        .previous-bar {
-            background-color: #adb5bd;
-            opacity: 0.7;
-            z-index: 1; /* Sits behind the latest bar */
-        }
+        .latest-bar { background-color: #0d6efd; z-index: 2; }
+        .previous-bar { background-color: #adb5bd; opacity: 0.7; z-index: 1; }
+        
         .justification {
             font-style: italic;
             color: #6c757d;
@@ -117,6 +127,12 @@
 
     <div class="dashboard-container">
         <h1>Your CMI Growth</h1>
+        <p class="subtitle">Tracking your journey to becoming a changemaker.</p>
+        
+        <div class="chart-container">
+            <canvas id="growthChart"></canvas>
+        </div>
+
         <div id="results">
             <p id="loading">Loading your results...</p>
             <p id="error" style="display: none;">Could not load your assessment data.</p>
@@ -124,7 +140,6 @@
     </div>
 
     <script>
-        // The entire script is updated to handle fetching and displaying history
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
             const assessmentId = params.get('id');
@@ -140,7 +155,6 @@
             }
 
             try {
-                // Step 1: Fetch the specific assessment to get the userId
                 const assessmentRes = await fetch(`/assessment/${assessmentId}`);
                 if (!assessmentRes.ok) throw new Error('Could not fetch initial assessment.');
                 const assessmentData = await assessmentRes.json();
@@ -148,13 +162,13 @@
 
                 if (!userId) throw new Error('User ID not found in assessment data.');
 
-                // Step 2: Fetch the entire history for that user
                 const historyRes = await fetch(`/history/${userId}`);
                 if (!historyRes.ok) throw new Error('Could not fetch user history.');
                 const historyData = await historyRes.json();
                 
                 loadingEl.style.display = 'none';
                 displayGrowthResults(historyData);
+                renderGrowthChart(historyData);
 
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -172,39 +186,37 @@
                 return;
             }
 
-            const latest = history[0]; // The history is sorted by date descending
+            const latest = history[0];
             const previous = history.length > 1 ? history[1] : null;
 
-            const skills = ['empathy', 'teamwork', 'leadership', 'initiative'];
-            skills.forEach(skillName => {
+            const skills = {
+                empathy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+                teamwork: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="4"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-4-1.5"/></svg>`,
+                leadership: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+                initiative: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"/><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"/><path d="M15 2v5h5"/></svg>`
+            };
+
+            for (const skillName in skills) {
                 const latestSkill = latest[skillName] || {};
                 const prevSkill = previous ? (previous[skillName] || {}) : {};
-
                 const latestScore = latestSkill.score || 0;
                 const prevScore = prevSkill.score || 0;
                 const justification = latestSkill.justification || 'No justification provided.';
                 const scoreChange = latestScore - prevScore;
-                
                 const skillTitle = skillName.charAt(0).toUpperCase() + skillName.slice(1);
 
                 let changeHtml = '';
                 if (previous) {
-                    if (scoreChange > 0) {
-                        changeHtml = `<span class="change positive">+${scoreChange}</span>`;
-                    } else if (scoreChange < 0) {
-                        changeHtml = `<span class="change negative">${scoreChange}</span>`;
-                    }
+                    if (scoreChange > 0) changeHtml = `<span class="change positive">+${scoreChange}</span>`;
+                    else if (scoreChange < 0) changeHtml = `<span class="change negative">${scoreChange}</span>`;
                 }
 
                 const card = document.createElement('div');
                 card.className = 'skill-card';
                 card.innerHTML = `
                     <div class="skill-header">
-                        <h2>${skillTitle}</h2>
-                        <div class="score-display">
-                            <span class="score">${latestScore}/10</span>
-                            ${changeHtml}
-                        </div>
+                        <div class="skill-title">${skills[skillName]}<h2>${skillTitle}</h2></div>
+                        <div class="score-display"><span class="score">${latestScore}/10</span>${changeHtml}</div>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar previous-bar" style="width: ${prevScore * 10}%"></div>
@@ -213,6 +225,43 @@
                     <p class="justification">${justification}</p>
                 `;
                 resultsEl.appendChild(card);
+            }
+        }
+
+        function renderGrowthChart(history) {
+            if (!history || history.length < 1) return;
+
+            // Reverse history to be chronological for the chart
+            const sortedHistory = [...history].reverse();
+
+            const labels = sortedHistory.map(item => {
+                const date = new Date(item.assessmentDate.stringValue);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+
+            const empathyData = sortedHistory.map(item => item.empathy.score || 0);
+            const teamworkData = sortedHistory.map(item => item.teamwork.score || 0);
+            const leadershipData = sortedHistory.map(item => item.leadership.score || 0);
+            const initiativeData = sortedHistory.map(item => item.initiative.score || 0);
+
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Empathy', data: empathyData, borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: false, tension: 0.1 },
+                        { label: 'Teamwork', data: teamworkData, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.2)', fill: false, tension: 0.1 },
+                        { label: 'Leadership', data: leadershipData, borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 0.2)', fill: false, tension: 0.1 },
+                        { label: 'Initiative', data: initiativeData, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: false, tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 10 }
+                    }
+                }
             });
         }
     </script>
