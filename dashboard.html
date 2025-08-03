@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your CMI Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .dashboard-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        h1 {
+            color: #005a9c;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .skill-card {
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #005a9c;
+            padding-left: 1.5rem;
+        }
+        .skill-card h2 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+        }
+        .skill-card .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #005a9c;
+        }
+        .skill-card .justification {
+            font-style: italic;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        #loading, #error {
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h1>Your CMI Reflection</h1>
+        <div id="results">
+            <p id="loading">Loading your results...</p>
+            <p id="error" style="display: none;">Could not load your assessment data. Please check the link or try again later.</p>
+            <!-- Results will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // This script runs when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the unique assessment ID from the URL
+            const params = new URLSearchParams(window.location.search);
+            const assessmentId = params.get('id');
+
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const resultsEl = document.getElementById('results');
+
+            if (!assessmentId) {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = "No assessment ID provided in the link.";
+                return;
+            }
+
+            // Fetch the data from our backend API
+            const apiUrl = `/assessment/${assessmentId}`; // Relative URL to our own server
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching assessment data:', error);
+                    loadingEl.style.display = 'none';
+                    errorEl.style.display = 'block';
+                });
+        });
+
+        function displayResults(data) {
+            const resultsEl = document.getElementById('results');
+            resultsEl.innerHTML = ''; // Clear loading message
+
+            const skills = ['empathy', 'teamwork', 'leadership', 'initiative'];
+            skills.forEach(skillName => {
+                const skillData = data[skillName];
+                if (skillData) {
+                    const card = document.createElement('div');
+                    card.className = 'skill-card';
+                    card.innerHTML = `
+                        <h2>${skillName.charAt(0).toUpperCase() + skillName.slice(1)}</h2>
+                        <p class="score">Score: ${skillData.score || 'N/A'}/10</p>
+                        <p class="justification">${skillData.justification || ''}</p>
+                    `;
+                    resultsEl.appendChild(card);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

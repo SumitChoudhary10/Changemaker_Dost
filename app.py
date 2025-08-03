@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 import faiss
 import pickle
@@ -97,10 +97,10 @@ def analyze_cmi_response(category, question, answer):
         return {"score": 0, "justification": "Could not analyze response."}
 
 def save_assessment_to_firestore(session_id, results):
-    """Saves the completed assessment results to Firestore."""
+    """Saves the assessment and returns the new document's ID."""
     try:
         user_id = session_id.split('/')[-1]
-        doc_ref = db.collection('assessments').document()
+        doc_ref = db.collection('assessments').document() # Let Firestore create a unique ID
         doc_ref.set({
             'userId': user_id,
             'assessmentDate': datetime.now(),
@@ -109,10 +109,10 @@ def save_assessment_to_firestore(session_id, results):
             'leadership': results.get('leadership', {}),
             'initiative': results.get('initiative', {})
         })
-        print(f"Successfully saved assessment for user {user_id}")
+        print(f"Successfully saved assessment {doc_ref.id} for user {user_id}")
+        return doc_ref.id # Return the unique ID
     except Exception as e:
         print(f"Error saving to Firestore: {e}")
-        # Re-raise the exception so the main webhook handler can catch it
         raise e
 
 def fetch_latest_assessment(session_id):
@@ -144,8 +144,7 @@ async def dialogflow_webhook(request: dict):
     try:
         intent_name = request['queryResult']['intent']['displayName']
         session_id = request['session']
-        print(f"Received intent: {intent_name}")
-
+        
         # --- Router for Ashoka Q&A ---
         if "ask_about_ashoka" in intent_name:
             user_question = request['queryResult']['queryText']
@@ -208,45 +207,42 @@ async def dialogflow_webhook(request: dict):
             results = context_params.get("results", {})
             analysis = analyze_cmi_response("Initiative", current_question, user_answer)
             results['initiative'] = analysis
-            save_assessment_to_firestore(session_id, results)
+            
+            assessment_id = save_assessment_to_firestore(session_id, results)
+            
+            dashboard_url = f"https://changemaker-dost-api.onrender.com/dashboard?id={assessment_id}"
+            
             return JSONResponse(content={
-                "fulfillmentText": "Thank you for completing the CMI reflection! Your results have been saved. You can ask to see your dashboard at any time."
+                "fulfillmentText": f"Thank you for completing the CMI reflection! You can view your personal dashboard using this secure link: {dashboard_url}"
             })
-
-        # --- Router for Dashboard ---
+        
         elif intent_name == "cmi_show_dashboard":
-            assessment_data = fetch_latest_assessment(session_id)
-            if assessment_data:
-                e = assessment_data.get('empathy', {})
-                t = assessment_data.get('teamwork', {})
-                l = assessment_data.get('leadership', {})
-                i = assessment_data.get('initiative', {})
-                
-                response_text = f"""Here are your latest CMI results:
-
-*Empathy:* {e.get('score', 'N/A')}/10
-_{e.get('justification', '')}_
-
-*Teamwork:* {t.get('score', 'N/A')}/10
-_{t.get('justification', '')}_
-
-*Leadership:* {l.get('score', 'N/A')}/10
-_{l.get('justification', '')}_
-
-*Initiative:* {i.get('score', 'N/A')}/10
-_{i.get('justification', '')}_
-
-Remember, this is a reflection tool for your growth!"""
-                return JSONResponse(content={"fulfillmentText": response_text.strip()})
-            else:
-                return JSONResponse(content={"fulfillmentText": "I couldn't find any completed assessments for you. Would you like to start one now?"})
-
-        else:
-            return JSONResponse(content={"fulfillmentText": "I'm not sure how to handle that."})
+            # This intent is now handled by the dashboard page, but we can keep a simple response.
+            return JSONResponse(content={"fulfillmentText": "You can view your dashboard using the link provided after your assessment."})
 
     except Exception as e:
         print(f"Error in main webhook: {e}")
         return JSONResponse(content={"fulfillmentText": "Sorry, an error occurred on my end."})
+
+# --- NEW ENDPOINTS FOR THE DASHBOARD ---
+@app.get("/dashboard")
+async def get_dashboard_page():
+    """Serves the dashboard.html file."""
+    return FileResponse('dashboard.html')
+
+@app.get("/assessment/{assessment_id}")
+async def get_assessment_data(assessment_id: str):
+    """Fetches a specific assessment's data from Firestore."""
+    try:
+        doc_ref = db.collection('assessments').document(assessment_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            return JSONResponse(content=doc.to_dict())
+        else:
+            return JSONResponse(content={"error": "Assessment not found"}, status_code=404)
+    except Exception as e:
+        print(f"Error fetching assessment {assessment_id}: {e}")
+        return JSONResponse(content={"error": "Could not fetch assessment data"}, status_code=500)
 
 @app.get("/")
 def read_root():
