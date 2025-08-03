@@ -285,6 +285,50 @@ async def get_assessment_data(assessment_id: str):
     else:
         return JSONResponse(content={"error": "Assessment not found"}, status_code=404)
 
+# --- NEW ENDPOINT TO GET USER HISTORY ---
+@app.get("/history/{user_id}")
+async def get_user_history(user_id: str):
+    """Fetches all assessments for a specific user using the REST API."""
+    # This URL is for running a query against the database
+    url = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents:runQuery?key={GOOGLE_API_KEY}"
+    
+    # This payload tells Firestore to find all documents for the user and order them by date
+    query_payload = {
+        "structuredQuery": {
+            "from": [{"collectionId": "assessments"}],
+            "where": {
+                "fieldFilter": {
+                    "field": {"fieldPath": "userId"},
+                    "op": "EQUAL",
+                    "value": {"stringValue": user_id}
+                }
+            },
+            "orderBy": [{
+                "field": {"fieldPath": "assessmentDate"},
+                "direction": "DESCENDING"
+            }]
+        }
+    }
+    try:
+        response = requests.post(url, json=query_payload)
+        response.raise_for_status()
+        
+        results = response.json()
+        assessments = []
+        for doc in results:
+            if 'document' in doc:
+                # We re-use our helper function to clean up the data
+                formatted_doc = unformat_from_firestore(doc['document'].get('fields', {}))
+                assessments.append(formatted_doc)
+        
+        return JSONResponse(content=assessments)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching history for user {user_id}: {e}")
+        if e.response is not None:
+            print(f"Response Body: {e.response.text}")
+        return JSONResponse(content={"error": "Could not fetch user history"}, status_code=500)
+    
+    
 @app.get("/")
 def read_root():
     return {"message": "Ashoka Bot Backend is running!"}
