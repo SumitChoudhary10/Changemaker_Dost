@@ -158,6 +158,79 @@ def unformat_from_firestore(fields):
             data[key] = value_dict[value_type]
     return data
 
+def fetch_user_history_via_rest(user_id):
+    """Fetches all assessments for a specific user using the REST API."""
+    # This URL is for running a query against the database
+    url = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents:runQuery?key={GOOGLE_API_KEY}"
+    
+    # This payload tells Firestore to find all documents for the user and order them by date
+    query_payload = {
+        "structuredQuery": {
+            "from": [{"collectionId": "assessments"}],
+            "where": {
+                "fieldFilter": {
+                    "field": {"fieldPath": "userId"},
+                    "op": "EQUAL",
+                    "value": {"stringValue": user_id}
+                }
+            },
+            "orderBy": [{
+                "field": {"fieldPath": "assessmentDate"},
+                "direction": "DESCENDING"
+            }]
+        }
+    }
+    try:
+        response = requests.post(url, json=query_payload)
+        response.raise_for_status()
+        
+        results = response.json()
+        assessments = []
+        for doc in results:
+            if 'document' in doc:
+                # We re-use our helper function to clean up the data
+                formatted_doc = unformat_from_firestore(doc['document'].get('fields', {}))
+                assessments.append(formatted_doc)
+        
+        return assessments
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching history for user {user_id}: {e}")
+        if e.response is not None:
+            print(f"Response Body: {e.response.text}")
+        return None 
+    
+
+# --- NEW FUNCTION FOR PERSONALIZED ADVICE ---
+def generate_improvement_tips(assessment_data):
+    """Generates personalized improvement tips based on the lowest CMI score."""
+    if not assessment_data:
+        return "I couldn't find your latest assessment to give you tips. Please complete one first!"
+
+    skills = ['empathy', 'teamwork', 'leadership', 'initiative']
+    lowest_skill = ''
+    lowest_score = 11  # Start with a score higher than max
+
+    for skill in skills:
+        score = assessment_data.get(skill, {}).get('score', 10)
+        if score < lowest_score:
+            lowest_score = score
+            lowest_skill = skill
+
+    if not lowest_skill:
+        return "You're doing great in all areas! Keep practicing these skills in your daily life."
+
+    prompt = f"""
+    You are 'Changemaker Dost', an encouraging and helpful AI coach.
+    A user has completed their CMI reflection and their lowest scoring area is '{lowest_skill}' with a score of {lowest_score}/10.
+    Based on this, provide 2-3 actionable, practical, and encouraging advice for a college student in India to improve their '{lowest_skill}' skill.
+    Frame the response as if you are speaking directly to the user. Start with something like, "It looks like a great area to focus on is {lowest_skill.capitalize()}. Here are a few ideas to help you grow:".
+    Keep the tone positive and empowering. Use bullet points for the advice.
+    """
+    model = genai.GenerativeModel(GENERATIVE_MODEL_NAME)
+    response = model.generate_content(prompt)
+    return response.text
+
+
 # --- API Endpoints ---
 @app.post("/dialogflow-webhook")
 async def dialogflow_webhook(request: dict):
@@ -248,7 +321,7 @@ async def dialogflow_webhook(request: dict):
                                         "type": "button",
                                         "icon": {
                                             "type": "open_in_new",
-                                            "color": "#FFFFFFC6"
+                                            "color": "#85d9f599"
                                         },
                                         "text": "View My Dashboard",
                                         "link": dashboard_url
@@ -260,6 +333,9 @@ async def dialogflow_webhook(request: dict):
                                         "options" : [
                                             {
                                                 "text" : "Run CMI assessment again"
+                                            },
+                                            {
+                                                "text" : "How can I improve my CMI score?"
                                             }
                                         ]
                                     }
@@ -270,6 +346,16 @@ async def dialogflow_webhook(request: dict):
                 ]
             }
             return JSONResponse(content=response_data)
+        
+        # --- NEW INTENT HANDLER FOR IMPROVEMENT TIPS ---
+        elif intent_name == "cmi_improve_score":
+            history = fetch_user_history_via_rest(user_id)
+            if not history:
+                return JSONResponse(content={"fulfillmentText": "I can't find your assessment results. Please complete one first so I can give you personalized advice."})
+            
+            latest_assessment = history[0]
+            improvement_tips = generate_improvement_tips(latest_assessment)
+            return JSONResponse(content={"fulfillmentText": improvement_tips})
         
         else:
             return JSONResponse(content={"fulfillmentText": "I'm not sure how to handle that."})
