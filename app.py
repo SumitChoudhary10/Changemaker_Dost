@@ -13,7 +13,6 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
 
-# Load environment variables from .env file
 load_dotenv()
 
 # --- Firebase Initialization (Final, Most Robust Method) ---
@@ -115,21 +114,6 @@ def save_assessment_to_firestore(session_id, results):
         print(f"Error saving to Firestore: {e}")
         raise e
 
-def fetch_latest_assessment(session_id):
-    """Fetches the most recent assessment for a user from Firestore."""
-    try:
-        user_id = session_id.split('/')[-1]
-        query = db.collection('assessments').where('userId', '==', user_id).order_by('assessmentDate', direction=firestore.Query.DESCENDING).limit(1)
-        docs = query.stream()
-        latest_doc = next(docs, None)
-        if latest_doc:
-            return latest_doc.to_dict()
-        else:
-            return None
-    except Exception as e:
-        print(f"Error fetching from Firestore: {e}")
-        return None
-
 def get_params_from_context(request, context_name_suffix):
     """Helper to extract parameters from a specific incoming context."""
     contexts = request['queryResult']['outputContexts']
@@ -217,7 +201,6 @@ async def dialogflow_webhook(request: dict):
             })
         
         elif intent_name == "cmi_show_dashboard":
-            # This intent is now handled by the dashboard page, but we can keep a simple response.
             return JSONResponse(content={"fulfillmentText": "You can view your dashboard using the link provided after your assessment."})
 
     except Exception as e:
