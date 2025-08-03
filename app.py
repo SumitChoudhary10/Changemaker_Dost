@@ -99,8 +99,13 @@ def format_for_firestore(data_dict):
     for key, value in data_dict.items():
         if isinstance(value, str):
             fields[key] = {"stringValue": value}
-        elif isinstance(value, int) or isinstance(value, float):
+        # --- THIS IS THE CORRECTED LOGIC ---
+        elif isinstance(value, int):
             fields[key] = {"integerValue": str(value)}
+        elif isinstance(value, float):
+            # Convert float to int before making it a string to satisfy the API
+            fields[key] = {"integerValue": str(int(value))}
+        # --- END OF CORRECTION ---
         elif isinstance(value, dict):
             fields[key] = {"mapValue": {"fields": format_for_firestore(value)}}
         elif isinstance(value, datetime):
