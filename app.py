@@ -1,3 +1,4 @@
+# FILE: app.py (Final Version with Firestore REST API)
 import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
@@ -99,13 +100,10 @@ def format_for_firestore(data_dict):
     for key, value in data_dict.items():
         if isinstance(value, str):
             fields[key] = {"stringValue": value}
-        # --- THIS IS THE CORRECTED LOGIC ---
         elif isinstance(value, int):
             fields[key] = {"integerValue": str(value)}
         elif isinstance(value, float):
-            # Convert float to int before making it a string to satisfy the API
             fields[key] = {"integerValue": str(int(value))}
-        # --- END OF CORRECTION ---
         elif isinstance(value, dict):
             fields[key] = {"mapValue": {"fields": format_for_firestore(value)}}
         elif isinstance(value, datetime):
@@ -124,20 +122,18 @@ def save_assessment_via_rest(session_id, results):
         'initiative': results.get('initiative', {})
     }
     
-    # Construct the API request
     url = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/assessments?key={GOOGLE_API_KEY}"
     payload = {"fields": format_for_firestore(document_data)}
     
     try:
-        response = requests.post(url, json=payload, timeout=20) # Set a timeout
-        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        response = requests.post(url, json=payload, timeout=20)
+        response.raise_for_status()
         
         doc_path = response.json().get('name', '')
         assessment_id = doc_path.split('/')[-1]
         print(f"Successfully saved assessment {assessment_id} via REST API.")
         return assessment_id
     except requests.exceptions.RequestException as e:
-        # This will catch timeouts, connection errors, and bad status codes
         print(f"Error saving to Firestore via REST API: {e}")
         if e.response is not None:
             print(f"Response Body: {e.response.text}")
@@ -159,7 +155,7 @@ def unformat_from_firestore(fields):
             data[key] = int(value_dict[value_type])
         elif value_type == 'timestampValue':
             data[key] = value_dict[value_type]
-        else: # stringValue, booleanValue, etc.
+        else:
             data[key] = value_dict[value_type]
     return data
 
@@ -170,14 +166,12 @@ async def dialogflow_webhook(request: dict):
         intent_name = request['queryResult']['intent']['displayName']
         session_id = request['session']
         
-        # --- Router for Ashoka Q&A ---
         if "ask_about_ashoka" in intent_name:
             user_question = request['queryResult']['queryText']
             relevant_chunks = search(user_question)
             final_answer = generate_full_answer(user_question, relevant_chunks)
             return JSONResponse(content={"fulfillmentText": final_answer})
 
-        # --- Router for CMI Assessment ---
         elif intent_name == "cmi_assessment_START":
             question = random.choice(QUESTION_BANK["empathy"])
             initial_results = {}
@@ -233,15 +227,39 @@ async def dialogflow_webhook(request: dict):
             analysis = analyze_cmi_response("Initiative", current_question, user_answer)
             results['initiative'] = analysis
             
-            # Save to DB using the new REST function and get the unique ID
             assessment_id = save_assessment_via_rest(session_id, results)
-            
-            # Create the unique dashboard link
             dashboard_url = f"https://changemaker-dost-api.onrender.com/dashboard?id={assessment_id}"
             
-            return JSONResponse(content={
-                "fulfillmentText": f"Thank you for completing the CMI reflection! You can view your personal dashboard using this secure link: {dashboard_url}"
-            })
+            # --- THIS IS THE NEW, CLICKABLE LINK RESPONSE ---
+            response_data = {
+                "fulfillmentMessages": [
+                    {
+                        "text": {
+                            "text": [
+                                "Thank you for completing the CMI reflection! You can view your personal dashboard using this secure link:"
+                            ]
+                        }
+                    },
+                    {
+                        "payload": {
+                            "richContent": [
+                                [
+                                    {
+                                        "type": "button",
+                                        "icon": {
+                                            "type": "open_in_new",
+                                            "color": "#FFFFFF"
+                                        },
+                                        "text": "View My Dashboard",
+                                        "link": dashboard_url
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            }
+            return JSONResponse(content=response_data)
         
         else:
             return JSONResponse(content={"fulfillmentText": "I'm not sure how to handle that."})
@@ -257,13 +275,11 @@ async def get_dashboard_page():
 
 @app.get("/assessment/{assessment_id}")
 async def get_assessment_data(assessment_id: str):
-    # This endpoint also uses the REST API to fetch data
     url = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents/assessments/{assessment_id}?key={GOOGLE_API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
         raw_data = response.json().get('fields', {})
-        # Use the new helper function to convert the data back to a simple format
         formatted_data = unformat_from_firestore(raw_data)
         return JSONResponse(content=formatted_data)
     else:
