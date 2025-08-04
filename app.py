@@ -2,7 +2,8 @@
 import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
-import requests # We will use requests for database interaction
+from fastapi.middleware.cors import CORSMiddleware 
+import requests 
 from dotenv import load_dotenv
 import random
 import json
@@ -45,6 +46,20 @@ QUESTION_BANK = {
 }
 
 app = FastAPI()
+
+# This allows your GitHub Pages website to make requests to this API
+origins = [
+    "https://sumitchoudhary10.github.io",
+    "http://localhost:8000", # For local testing
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods, including OPTIONS
+    allow_headers=["*"],
+)
 
 # --- Load Ashoka Q&A Data at Startup ---
 print("Loading FAISS index and text chunks for Ashoka Q&A...")
