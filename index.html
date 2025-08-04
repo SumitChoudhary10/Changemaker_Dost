@@ -290,46 +290,35 @@
               detail: { query: userMessage },
             });
             dfMessenger.dispatchEvent(event);
-
-            try {
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        queryResult: { queryText: userMessage },
-                        session: `projects/changemaker-dost-db/agent/sessions/${persistentUserId}`
-                    })
-                });
-
-                if (!response.ok) throw new Error('Network response was not ok');
-
-                const data = await response.json();
-                
-                if (data.fulfillmentMessages) {
-                    let fullText = '';
-                    data.fulfillmentMessages.forEach(msg => {
-                        if (msg.text) {
-                            fullText += msg.text.text.join('\n') + '\n';
-                        }
-                    });
-                    botMessageElement.querySelector('.message-content').innerHTML = fullText.trim().replace(/\n/g, '<br>');
-
-                    const richContent = data.fulfillmentMessages.find(msg => msg.payload && msg.payload.richContent);
-                    if (richContent) {
-                        renderRichContent(richContent.payload.richContent);
-                    }
-
-                } else if (data.fulfillmentText) {
-                    botMessageElement.querySelector('.message-content').textContent = data.fulfillmentText;
-                } else {
-                    botMessageElement.querySelector('.message-content').textContent = "I'm not sure how to respond to that.";
-                }
-
-            } catch (error) {
-                console.error('API error:', error);
-                botMessageElement.querySelector('.message-content').textContent = 'Sorry, I encountered an error. Please try again.';
-            }
         });
+
+        function handleBotResponse(messages) {
+            const thinkingMessage = messageList.querySelector('.bot:last-child');
+            if(thinkingMessage && thinkingMessage.querySelector('.message-content').innerHTML.includes('typing-cursor')) {
+                thinkingMessage.remove();
+            }
+
+            let fullText = '';
+            let richContent = null;
+
+            if (messages && messages.length > 0) {
+                messages.forEach(msg => {
+                    if (msg.text) {
+                        fullText += msg.text.text.join('\n') + '\n';
+                    }
+                    if (msg.payload && msg.payload.richContent) {
+                        richContent = msg.payload.richContent;
+                    }
+                });
+            }
+
+            addBotMessage(fullText.trim() || "I'm not sure how to respond to that.");
+
+            if (richContent) {
+                renderRichContent(richContent);
+            }
+            isBotReplying = false;
+        }
         
         function renderRichContent(richContent) {
             const richContentContainer = document.createElement('div');
@@ -386,8 +375,6 @@
           detail: { query: 'WELCOME_EVENT' },
         });
         dfMessenger.dispatchEvent(event);
-        
-        showWelcomeScreen();
 
     </script>
 
