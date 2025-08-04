@@ -256,7 +256,7 @@ async def dialogflow_webhook(request: dict):
         user_question = request['queryResult']['queryText']
         
         # First, check if this is a CMI request based on keywords
-        cmi_keywords = ['cmi', 'Start CMI assessment', 'start cmi']
+        cmi_keywords = ['cmi', 'Start CMI assessment', 'start cmi', 'Run CMI assessment again']
         if any(keyword in user_question.lower() for keyword in cmi_keywords):
             intent_name = "cmi_assessment_START"
         else:

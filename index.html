@@ -189,6 +189,15 @@
         </footer>
     </div>
 
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    <df-messenger
+      style="display: none;"
+      chat-title="Changemaker Dost"
+      agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
+      language-code="en"
+      location="asia-south1"
+    ></df-messenger>
+
     <script>
         const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
@@ -257,6 +266,11 @@
             }
         });
 
+        dfMessenger.addEventListener('df-response-received', (event) => {
+            const messages = event.detail.response.queryResult.fulfillmentMessages;
+            handleBotResponse(messages);
+        });
+
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const userMessage = userInput.value.trim();
@@ -269,8 +283,13 @@
 
             addUserMessage(userMessage);
             userInput.value = '';
-
+            isBotReplying = true;
             const botMessageElement = addBotMessage('Dost is thinking...');
+            
+            const event = new CustomEvent('df-request-query', {
+              detail: { query: userMessage },
+            });
+            dfMessenger.dispatchEvent(event);
             
             try {
                 const response = await fetch(backendUrl, {
