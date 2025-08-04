@@ -290,7 +290,7 @@
               detail: { query: userMessage },
             });
             dfMessenger.dispatchEvent(event);
-            
+
             try {
                 const response = await fetch(backendUrl, {
                     method: 'POST',
@@ -380,6 +380,13 @@
         }
 
         persistentUserId = getOrCreateUserId();
+        dfMessenger.setAttribute('session-id', persistentUserId);
+
+        const event = new CustomEvent('df-request-query', {
+          detail: { query: 'WELCOME_EVENT' },
+        });
+        dfMessenger.dispatchEvent(event);
+        
         showWelcomeScreen();
 
     </script>
