@@ -250,7 +250,10 @@ def generate_improvement_tips(assessment_data):
 @app.post("/dialogflow-webhook")
 async def dialogflow_webhook(request: dict):
     try:
-        intent_name = request['queryResult']['intent']['displayName']
+        if 'intent' in request['queryResult']:
+            intent_name = request['queryResult']['intent']['displayName']
+        else:
+            intent_name = "ask_about_ashoka"
         session_id = request['session']
         user_id = session_id.split('/')[-1]
         
