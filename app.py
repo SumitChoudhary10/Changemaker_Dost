@@ -250,12 +250,22 @@ def generate_improvement_tips(assessment_data):
 @app.post("/dialogflow-webhook")
 async def dialogflow_webhook(request: dict):
     try:
-        if 'intent' in request['queryResult']:
-            intent_name = request['queryResult']['intent']['displayName']
-        else:
-            intent_name = "ask_about_ashoka"
+        # --- This is the new, smarter routing logic ---
         session_id = request['session']
         user_id = session_id.split('/')[-1]
+        user_question = request['queryResult']['queryText']
+        
+        # First, check if this is a CMI request based on keywords
+        cmi_keywords = ['cmi', 'Start CMI assessment', 'start cmi']
+        if any(keyword in user_question.lower() for keyword in cmi_keywords):
+            intent_name = "cmi_assessment_START"
+        else:
+            if 'intent' in request['queryResult']:
+                intent_name = request['queryResult']['intent']['displayName']
+            else:
+                intent_name = "ask_about_ashoka"
+        
+        # print(f"Routing to intent: {intent_name} for user: {user_id}")
         
         if "ask_about_ashoka" in intent_name:
             user_question = request['queryResult']['queryText']
