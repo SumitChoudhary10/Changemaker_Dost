@@ -375,7 +375,8 @@
             userInput.value = '';
             addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
 
-            dfMessenger.sendRequest('text', userMessage);
+            // UPDATED LINE
+            dfMessenger.sendQuery({ text: userMessage });
         }
 
         function handleChipClick(text) {
@@ -418,7 +419,9 @@
             if (welcomeScreen) messageList.innerHTML = '';
             addUserMessage("Show me my dashboard");
             addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
-            dfMessenger.sendRequest('text', 'show my dashboard');
+            
+            // UPDATED LINE
+            dfMessenger.sendQuery({ text: 'show my dashboard' });
         }
 
         // --- ATTACHING EVENT LISTENERS ---
