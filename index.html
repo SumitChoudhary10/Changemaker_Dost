@@ -176,7 +176,14 @@
 
         // --- CORE LOGIC ---
         async function sendMessageToDialogflow(message) {
+            // THIS IS THE NEW DEBUGGING LINE
+            console.log("Attempting to send message. Current token is:", dialogflowAccessToken);
+
             if (!dialogflowAccessToken) {
+                const thinkingMessage = messageList.querySelector('.bot:last-child');
+                if (thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
+                    thinkingMessage.remove();
+                }
                 addBotMessage("I'm sorry, my connection has been lost. Please refresh the page.");
                 return;
             }
@@ -210,8 +217,10 @@
 
             } catch (error) {
                 console.error("Dialogflow API Error:", error);
-                const thinkingMessage = messageList.querySelector('.bot:last-child .typing-cursor');
-                if(thinkingMessage) thinkingMessage.parentElement.parentElement.remove();
+                const thinkingMessage = messageList.querySelector('.bot:last-child');
+                if(thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
+                    thinkingMessage.remove();
+                }
                 addBotMessage("I'm sorry, I'm having trouble connecting right now.");
             }
         }
