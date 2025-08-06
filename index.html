@@ -71,12 +71,10 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const DIALOGFLOW_PROJECT_ID = 'changemaker-dost-lipw'; // Your Dialogflow Project ID
-        const DIALOGFLOW_LOCATION = 'asia-south1'; // Your agent's location
-        const BACKEND_API_URL = 'https://changemaker-dost-api.onrender.com'; // Your Render backend URL
+        const DIALOGFLOW_PROJECT_ID = 'changemaker-dost-lipw';
+        const DIALOGFLOW_LOCATION = 'asia-south1';
+        const BACKEND_API_URL = 'https://changemaker-dost-api.onrender.com';
 
-        // --- DOM Element References ---
         const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
         const messageList = document.getElementById('messageList');
@@ -85,15 +83,26 @@
         let sessionId = '';
         let dialogflowAccessToken = '';
 
-        // --- INITIALIZATION ---
         async function initializeChat() {
             sessionId = getOrCreateSessionId();
             try {
                 const response = await fetch(`${BACKEND_API_URL}/api/token`);
                 if (!response.ok) throw new Error('Failed to fetch auth token');
+                
                 const data = await response.json();
+                
+                // --- NEW DETAILED LOGGING ---
+                console.log("Received data object from /api/token:", data);
+                
                 dialogflowAccessToken = data.access_token;
-                console.log("Authorization successful. Ready to chat.");
+
+                console.log("Assigned token value:", dialogflowAccessToken);
+                if (!dialogflowAccessToken) {
+                    console.error("CRITICAL: access_token field is missing or empty in the backend response!");
+                }
+                // --- END OF NEW LOGGING ---
+
+                console.log("Authorization check complete. Ready to chat.");
             } catch (error) {
                 console.error("Initialization Error:", error);
                 addBotMessage("Error: Could not connect to the chatbot service. Please try refreshing the page.");
@@ -110,7 +119,6 @@
             return sId;
         }
 
-        // --- UI RENDERING FUNCTIONS ---
         function showWelcomeScreen() {
             messageList.innerHTML = `
                 <div class="welcome-screen" id="welcomeScreen">
@@ -128,57 +136,15 @@
             ).join('');
         }
 
-        function addUserMessage(text) {
-            const el = document.createElement('div');
-            el.className = 'message user';
-            el.innerHTML = `<div class="message-content">${text}</div>`;
-            messageList.appendChild(el);
-            messageList.scrollTop = messageList.scrollHeight;
-        }
+        function addUserMessage(text) { /* ... same as before ... */ }
+        function addBotMessage(text) { /* ... same as before ... */ }
+        function renderRichContent(payload) { /* ... same as before ... */ }
+        
+        // --- Minimized UI functions for brevity, logic is unchanged ---
+        function addUserMessage(text){const e=document.createElement("div");e.className="message user",e.innerHTML=`<div class="message-content">${text}</div>`,messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight}function addBotMessage(text){const e=document.createElement("div");return e.className="message bot",e.innerHTML=`<div class="message-content">${text.replace(/\n/g,"<br>")}</div>`,messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight,e}function renderRichContent(payload){if(payload&&payload.richContent){const e=document.createElement("div");e.className="suggestion-chips",payload.richContent[0].forEach(t=>{t.forEach(o=>{if("button"===o.type&&o.link){const n=document.createElement("a");n.href=o.link,n.target="_blank",n.className="chip",n.innerHTML=o.icon?`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> <span>${o.text}</span>`:o.text,e.appendChild(n)}else if("chips"===o.type)o.options.forEach(t=>{const o=document.createElement("div");o.className="chip",o.textContent=t.text,o.onclick=()=>handleChipClick(t.text),e.appendChild(o)})})}),messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight}}
 
-        function addBotMessage(text) {
-            const el = document.createElement('div');
-            el.className = 'message bot';
-            el.innerHTML = `<div class="message-content">${text.replace(/\n/g, '<br>')}</div>`;
-            messageList.appendChild(el);
-            messageList.scrollTop = messageList.scrollHeight;
-            return el;
-        }
-
-        function renderRichContent(payload) {
-            if (!payload || !payload.richContent) return;
-            const container = document.createElement('div');
-            container.className = 'suggestion-chips';
-            
-            payload.richContent[0].forEach(row => {
-                row.forEach(item => {
-                    if (item.type === 'button' && item.link) {
-                        const button = document.createElement('a');
-                        button.href = item.link;
-                        button.target = '_blank';
-                        button.className = 'chip';
-                        button.innerHTML = item.icon ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> <span>${item.text}</span>` : item.text;
-                        container.appendChild(button);
-                    } else if (item.type === 'chips') {
-                        item.options.forEach(option => {
-                            const chip = document.createElement('div');
-                            chip.className = 'chip';
-                            chip.textContent = option.text;
-                            chip.onclick = () => handleChipClick(option.text);
-                            container.appendChild(chip);
-                        });
-                    }
-                });
-            });
-            messageList.appendChild(container);
-            messageList.scrollTop = messageList.scrollHeight;
-        }
-
-        // --- CORE LOGIC ---
         async function sendMessageToDialogflow(message) {
-            // THIS IS THE NEW DEBUGGING LINE
             console.log("Attempting to send message. Current token is:", dialogflowAccessToken);
-
             if (!dialogflowAccessToken) {
                 const thinkingMessage = messageList.querySelector('.bot:last-child');
                 if (thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
@@ -189,86 +155,27 @@
             }
 
             const apiUrl = `https://${DIALOGFLOW_LOCATION}-dialogflow.googleapis.com/v2/projects/${DIALOGFLOW_PROJECT_ID}/agent/sessions/${sessionId}:detectIntent`;
-            
-            const requestBody = {
-                queryInput: {
-                    text: {
-                        text: message,
-                        languageCode: 'en-US'
-                    }
-                }
-            };
+            const requestBody = { queryInput: { text: { text: message, languageCode: 'en-US' } } };
 
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + dialogflowAccessToken,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Authorization': 'Bearer ' + dialogflowAccessToken, 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+                if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); }
                 const data = await response.json();
                 handleDfResponse(data);
-
             } catch (error) {
                 console.error("Dialogflow API Error:", error);
                 const thinkingMessage = messageList.querySelector('.bot:last-child');
-                if(thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
-                    thinkingMessage.remove();
-                }
+                if(thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) { thinkingMessage.remove(); }
                 addBotMessage("I'm sorry, I'm having trouble connecting right now.");
             }
         }
         
-        // --- EVENT HANDLERS ---
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const userMessage = userInput.value.trim();
-            if (!userMessage) return;
-
-            const welcomeScreen = document.getElementById('welcomeScreen');
-            if (welcomeScreen) welcomeScreen.remove();
-
-            addUserMessage(userMessage);
-            userInput.value = '';
-            addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
-
-            sendMessageToDialogflow(userMessage);
-        }
-
-        function handleChipClick(text) {
-            const welcomeScreen = document.getElementById('welcomeScreen');
-            if (welcomeScreen) welcomeScreen.remove();
-            addUserMessage(text);
-            addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
-            sendMessageToDialogflow(text);
-        }
-        
-        function handleDfResponse(data) {
-            const thinkingMessage = messageList.querySelector('.bot:last-child');
-            if (thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
-                thinkingMessage.remove();
-            }
-
-            const messages = data.queryResult.fulfillmentMessages;
-            messages.forEach(msg => {
-                if (msg.text && msg.text.text.length > 0) {
-                    addBotMessage(msg.text.text.join('\n'));
-                }
-                if (msg.payload) {
-                    renderRichContent(msg.payload);
-                }
-            });
-        }
-        
+        function handleFormSubmit(e) { e.preventDefault(); const t = userInput.value.trim(); t && (document.getElementById("welcomeScreen")?.remove(), addUserMessage(t), userInput.value = "", addBotMessage('<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>'), sendMessageToDialogflow(t)); }
+        function handleChipClick(text) { document.getElementById("welcomeScreen")?.remove(); addUserMessage(text); addBotMessage('<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>'); sendMessageToDialogflow(text); }
+        function handleDfResponse(data) { const e = messageList.querySelector(".bot:last-child"); e && e.innerHTML.includes("typing-cursor") && e.remove(); const t = data.queryResult.fulfillmentMessages; t.forEach(e => { e.text && e.text.text.length > 0 && addBotMessage(e.text.text.join("\n")); e.payload && renderRichContent(e.payload) }); }
         dashboardButton.addEventListener('click', () => handleChipClick("Show me my dashboard"));
-
-        // --- Start the application ---
+        chatForm.addEventListener('submit', handleFormSubmit);
+        
         initializeChat();
     </script>
 </body>
