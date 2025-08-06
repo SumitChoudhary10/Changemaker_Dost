@@ -453,6 +453,6 @@ async def get_user_history(user_id: str):
         return JSONResponse(content={"error": "Could not fetch user history"}, status_code=500)
     
 
-@app.get("/")
+@app.get("/", methods=["GET", "HEAD"])
 def read_root():
     return {"message": "Ashoka Bot Backend is running!"}
