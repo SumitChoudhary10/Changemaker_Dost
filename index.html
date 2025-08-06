@@ -21,40 +21,227 @@
             --light-text-color: #6c757d;
             --dashboard-color: #198754; 
         }
-        html, body { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-color); }
-        .chat-container { display: flex; flex-direction: column; height: 100%; max-width: 800px; margin: 0 auto; background-color: var(--background-color); }
-        .message-list { flex-grow: 1; overflow-y: auto; padding: 1rem; background-color: var(--chat-background); display: flex; flex-direction: column; }
-        .welcome-screen { text-align: center; padding: 2rem; margin: auto; display: flex; flex-direction: column; justify-content: space-between; height: 70vh; max-height: 500px; animation: fadeIn 0.5s ease-in-out; }
-        .welcome-top h1 { font-size: 3rem; font-weight: 700; color: var(--accent-color); margin-bottom: 0.5rem; }
-        .welcome-middle p { font-size: 1.15rem; line-height: 1.6; color: var(--light-text-color); max-width: 450px; margin: 0 auto; }
-        .welcome-middle p.darker { color: var(--text-color); font-weight: 500; }
-        .message { display: flex; margin-bottom: 1rem; max-width: 90%; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .message-content { padding: 0.75rem 1rem; border-radius: 18px; line-height: 1.5; word-wrap: break-word; }
-        .message a { color: var(--accent-color); font-weight: 600; text-decoration: underline; }
-        .message.user { margin-left: auto; flex-direction: row-reverse; }
-        .message.user .message-content { background-color: var(--user-message-bg); border-bottom-right-radius: 4px; }
-        .message.bot .message-content { background-color: var(--bot-message-bg); border-bottom-left-radius: 4px; }
-        .typing-cursor { display: inline-block; width: 8px; height: 8px; background-color: var(--light-text-color); border-radius: 50%; margin: 0 2px; animation: blink 1.4s infinite both; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--background-color);
+        }
+
+        .message-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: var(--chat-background);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Welcome Screen Styling */
+        .welcome-screen {
+            text-align: center;
+            padding: 2rem;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 70vh;
+            max-height: 500px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .welcome-top h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-middle p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: var(--light-text-color);
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        .welcome-middle p.darker {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        /* Message Styling */
+        .message {
+            display: flex;
+            margin-bottom: 1rem;
+            max-width: 90%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message a {
+            color: var(--accent-color);
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message.user .message-content {
+            background-color: var(--user-message-bg);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background-color: var(--bot-message-bg);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Typing Indicator Styling */
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--light-text-color);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: blink 1.4s infinite both;
+        }
+
         .typing-cursor:nth-child(2) { animation-delay: 0.2s; }
         .typing-cursor:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
-        .chat-input-area { padding: 1rem; border-top: 1px solid var(--border-color); background-color: var(--background-color); flex-shrink: 0; }
-        .chat-input-form { display: flex; gap: 0.75rem; align-items: center; }
-        .chat-input { flex-grow: 1; padding: 0.85rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif; outline: none; }
-        .chat-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); }
-        .icon-button { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: none; border-radius: 8px; cursor: pointer; background-color: var(--accent-color); color: white; transition: background-color 0.2s; flex-shrink: 0; }
-        .icon-button:hover { background-color: #0b5ed7; }
-        .icon-button svg { width: 24px; height: 24px; }
-        .dashboard-button { background-color: var(--dashboard-color); }
-        .dashboard-button:hover { background-color: #157347; }
-        .suggestion-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; padding-top: 1rem; justify-content: center; align-self: center; }
-        .chip { padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 16px; cursor: pointer; background-color: var(--background-color); transition: background-color 0.2s, border-color 0.2s; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-color); }
-        .chip:hover { background-color: #e9ecef; border-color: #adb5bd; }
-        .chip svg { width: 18px; height: 18px; color: var(--accent-color); }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+
+        /* Chat Input Area Styling */
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--background-color);
+            flex-shrink: 0;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+        }
+        .chat-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+        }
+
+        .icon-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--accent-color);
+            color: white;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .icon-button:hover {
+            background-color: #0b5ed7;
+        }
+
+        .icon-button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .dashboard-button {
+            background-color: var(--dashboard-color);
+        }
+
+        .dashboard-button:hover {
+            background-color: #157347;
+        }
+
+        /* Suggestion Chips Styling */
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-top: 1rem;
+            justify-content: center;
+            align-self: center; /* Center the chips container */
+        }
+
+        .chip {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            cursor: pointer;
+            background-color: var(--background-color);
+            transition: background-color 0.2s, border-color 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex; /* For button with icon */
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none; /* For link buttons */
+            color: var(--text-color);
+        }
+        
+        .chip:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .chip svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
+
     <div class="chat-container">
         <main class="message-list" id="messageList"></main>
         <footer class="chat-input-area">
@@ -70,55 +257,38 @@
         </footer>
     </div>
 
-    <script>
-        const DIALOGFLOW_PROJECT_ID = 'changemaker-dost-lipw';
-        const DIALOGFLOW_LOCATION = 'asia-south1';
-        const BACKEND_API_URL = 'https://changemaker-dost-api.onrender.com';
+    <df-messenger
+      style="display: none;"
+      agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
+      language-code="en"
+    ></df-messenger>
 
+    <script>
+        // --- DOM Element References ---
         const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
         const messageList = document.getElementById('messageList');
         const dashboardButton = document.getElementById('dashboardButton');
-        
-        let sessionId = '';
-        let dialogflowAccessToken = '';
+        const dfMessenger = document.querySelector('df-messenger');
 
-        async function initializeChat() {
-            sessionId = getOrCreateSessionId();
-            try {
-                const response = await fetch(`${BACKEND_API_URL}/api/token`);
-                if (!response.ok) throw new Error('Failed to fetch auth token');
-                
-                const data = await response.json();
-                
-                // --- NEW DETAILED LOGGING ---
-                console.log("Received data object from /api/token:", data);
-                
-                dialogflowAccessToken = data.access_token;
+        let persistentUserId = '';
 
-                console.log("Assigned token value:", dialogflowAccessToken);
-                if (!dialogflowAccessToken) {
-                    console.error("CRITICAL: access_token field is missing or empty in the backend response!");
-                }
-                // --- END OF NEW LOGGING ---
-
-                console.log("Authorization check complete. Ready to chat.");
-            } catch (error) {
-                console.error("Initialization Error:", error);
-                addBotMessage("Error: Could not connect to the chatbot service. Please try refreshing the page.");
+        // --- INITIALIZATION ---
+        function getOrCreateUserId() {
+            let userId = localStorage.getItem('changemakerDost_userId');
+            if (!userId) {
+                userId = 'user_' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('changemakerDost_userId', userId);
             }
-            showWelcomeScreen();
+            return userId;
         }
 
-        function getOrCreateSessionId() {
-            let sId = localStorage.getItem('changemakerDost_sessionId');
-            if (!sId) {
-                sId = 'session_' + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('changemakerDost_sessionId', sId);
-            }
-            return sId;
-        }
+        persistentUserId = getOrCreateUserId();
+        dfMessenger.setAttribute('session-id', persistentUserId);
 
+        showWelcomeScreen();
+
+        // --- UI RENDERING FUNCTIONS ---
         function showWelcomeScreen() {
             messageList.innerHTML = `
                 <div class="welcome-screen" id="welcomeScreen">
@@ -130,53 +300,132 @@
                     <div class="welcome-bottom"><div class="suggestion-chips" id="suggestionChips"></div></div>
                 </div>
             `;
+            const suggestionChipsContainer = document.getElementById('suggestionChips');
             const chips = ["About Ashoka young changemakers", "Start CMI assessment"];
-            document.getElementById('suggestionChips').innerHTML = chips.map(text => 
-                `<div class="chip" onclick="handleChipClick('${text}')">${text}</div>`
-            ).join('');
+            chips.forEach(text => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.textContent = text;
+                chip.onclick = () => handleChipClick(text);
+                suggestionChipsContainer.appendChild(chip);
+            });
         }
 
-        function addUserMessage(text) { /* ... same as before ... */ }
-        function addBotMessage(text) { /* ... same as before ... */ }
-        function renderRichContent(payload) { /* ... same as before ... */ }
-        
-        // --- Minimized UI functions for brevity, logic is unchanged ---
-        function addUserMessage(text){const e=document.createElement("div");e.className="message user",e.innerHTML=`<div class="message-content">${text}</div>`,messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight}function addBotMessage(text){const e=document.createElement("div");return e.className="message bot",e.innerHTML=`<div class="message-content">${text.replace(/\n/g,"<br>")}</div>`,messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight,e}function renderRichContent(payload){if(payload&&payload.richContent){const e=document.createElement("div");e.className="suggestion-chips",payload.richContent[0].forEach(t=>{t.forEach(o=>{if("button"===o.type&&o.link){const n=document.createElement("a");n.href=o.link,n.target="_blank",n.className="chip",n.innerHTML=o.icon?`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> <span>${o.text}</span>`:o.text,e.appendChild(n)}else if("chips"===o.type)o.options.forEach(t=>{const o=document.createElement("div");o.className="chip",o.textContent=t.text,o.onclick=()=>handleChipClick(t.text),e.appendChild(o)})})}),messageList.appendChild(e),messageList.scrollTop=messageList.scrollHeight}}
+        function addUserMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message user';
+            messageElement.innerHTML = `<div class="message-content">${text}</div>`;
+            messageList.appendChild(messageElement);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
 
-        async function sendMessageToDialogflow(message) {
-            console.log("Attempting to send message. Current token is:", dialogflowAccessToken);
-            if (!dialogflowAccessToken) {
-                const thinkingMessage = messageList.querySelector('.bot:last-child');
-                if (thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) {
-                    thinkingMessage.remove();
-                }
-                addBotMessage("I'm sorry, my connection has been lost. Please refresh the page.");
-                return;
+        function addBotMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message bot';
+            // Simple check to see if the text contains a link to make it clickable
+            const processedText = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+            messageElement.innerHTML = `<div class="message-content">${processedText}</div>`;
+            messageList.appendChild(messageElement);
+            messageList.scrollTop = messageList.scrollHeight;
+            return messageElement;
+        }
+
+        function renderRichContent(richContent) {
+            const container = document.createElement('div');
+            container.className = 'suggestion-chips';
+
+            richContent.forEach(row => {
+                row.forEach(item => {
+                    if (item.type === 'button' && item.link) {
+                        const button = document.createElement('a');
+                        button.href = item.link;
+                        button.target = '_blank';
+                        button.className = 'chip';
+                        if (item.icon) {
+                            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> <span>${item.text}</span>`;
+                        } else {
+                            button.textContent = item.text;
+                        }
+                        container.appendChild(button);
+                    } else if (item.type === 'chips') {
+                        item.options.forEach(option => {
+                            const chip = document.createElement('div');
+                            chip.className = 'chip';
+                            chip.textContent = option.text;
+                            chip.onclick = () => handleChipClick(option.text);
+                            container.appendChild(chip);
+                        });
+                    }
+                });
+            });
+            messageList.appendChild(container);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+        
+        // --- EVENT HANDLERS ---
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            if (welcomeScreen) messageList.innerHTML = '';
+
+            addUserMessage(userMessage);
+            userInput.value = '';
+            addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
+
+            dfMessenger.sendRequest('text', userMessage);
+        }
+
+        function handleChipClick(text) {
+            userInput.value = text;
+            chatForm.dispatchEvent(new Event('submit', { bubbles: true }));
+        }
+
+        function handleDfResponse(event) {
+            const thinkingMessage = messageList.querySelector('.bot:last-child');
+            if (thinkingMessage && thinkingMessage.querySelector('.typing-cursor')) {
+                thinkingMessage.remove();
             }
 
-            const apiUrl = `https://${DIALOGFLOW_LOCATION}-dialogflow.googleapis.com/v2/projects/${DIALOGFLOW_PROJECT_ID}/agent/sessions/${sessionId}:detectIntent`;
-            const requestBody = { queryInput: { text: { text: message, languageCode: 'en-US' } } };
+            const responses = event.detail.responses;
+            let fullText = '';
+            let richContent = null;
 
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Authorization': 'Bearer ' + dialogflowAccessToken, 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
-                if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); }
-                const data = await response.json();
-                handleDfResponse(data);
-            } catch (error) {
-                console.error("Dialogflow API Error:", error);
-                const thinkingMessage = messageList.querySelector('.bot:last-child');
-                if(thinkingMessage && thinkingMessage.innerHTML.includes('typing-cursor')) { thinkingMessage.remove(); }
-                addBotMessage("I'm sorry, I'm having trouble connecting right now.");
+            if (responses && responses.length > 0) {
+                responses.forEach(res => {
+                    if (res.text && res.text.text.length > 0) {
+                        fullText += res.text.text.join('\n') + '\n';
+                    }
+                    if (res.payload && res.payload.richContent) {
+                        richContent = res.payload.richContent[0];
+                    }
+                });
+            }
+
+            if (fullText.trim()) {
+                addBotMessage(fullText.trim());
+            }
+
+            if (richContent) {
+                renderRichContent(richContent);
             }
         }
         
-        function handleFormSubmit(e) { e.preventDefault(); const t = userInput.value.trim(); t && (document.getElementById("welcomeScreen")?.remove(), addUserMessage(t), userInput.value = "", addBotMessage('<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>'), sendMessageToDialogflow(t)); }
-        function handleChipClick(text) { document.getElementById("welcomeScreen")?.remove(); addUserMessage(text); addBotMessage('<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>'); sendMessageToDialogflow(text); }
-        function handleDfResponse(data) { const e = messageList.querySelector(".bot:last-child"); e && e.innerHTML.includes("typing-cursor") && e.remove(); const t = data.queryResult.fulfillmentMessages; t.forEach(e => { e.text && e.text.text.length > 0 && addBotMessage(e.text.text.join("\n")); e.payload && renderRichContent(e.payload) }); }
-        dashboardButton.addEventListener('click', () => handleChipClick("Show me my dashboard"));
+        function handleDashboardClick() {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            if (welcomeScreen) messageList.innerHTML = '';
+            addUserMessage("Show me my dashboard");
+            addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
+            dfMessenger.sendRequest('text', 'show my dashboard');
+        }
+
+        // --- ATTACHING EVENT LISTENERS ---
         chatForm.addEventListener('submit', handleFormSubmit);
-        
-        initializeChat();
+        dfMessenger.addEventListener('df-response-received', handleDfResponse);
+        dashboardButton.addEventListener('click', handleDashboardClick);
     </script>
+
 </body>
 </html>

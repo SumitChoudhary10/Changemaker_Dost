@@ -12,10 +12,6 @@ import google.generativeai as genai
 import faiss
 import pickle
 import numpy as np
-from google.oauth2 import service_account
-from fastapi.security import OAuth2PasswordBearer
-
-
 
 load_dotenv()
 
@@ -246,22 +242,6 @@ def generate_improvement_tips(assessment_data):
     model = genai.GenerativeModel(GENERATIVE_MODEL_NAME)
     response = model.generate_content(prompt)
     return response.text
-
-@app.get("/api/token")
-async def get_dialogflow_token():
-    try:
-        # Define the scope required to interact with the Dialogflow API
-        scopes = ['https://www.googleapis.com/auth/dialogflow']
-        
-        # Create credentials from your service account key file
-        credentials = service_account.Credentials.from_service_account_file(
-            "serviceAccountKey.json", scopes=scopes)
-        
-        # Return the temporary access token
-        return JSONResponse(content={"access_token": credentials.token})
-    except Exception as e:
-        print(f"Error generating token: {e}")
-        return JSONResponse(content={"error": "Could not generate authentication token."}, status_code=500)
 
 
 # --- API Endpoints ---
