@@ -101,6 +101,12 @@
             word-wrap: break-word;
         }
 
+        .message a {
+            color: var(--accent-color);
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
         .message.user {
             margin-left: auto;
             flex-direction: row-reverse;
@@ -203,6 +209,7 @@
             gap: 0.5rem;
             padding-top: 1rem;
             justify-content: center;
+            align-self: center; /* Center the chips container */
         }
 
         .chip {
@@ -214,19 +221,29 @@
             transition: background-color 0.2s, border-color 0.2s;
             font-size: 0.9rem;
             font-weight: 500;
+            display: flex; /* For button with icon */
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none; /* For link buttons */
+            color: var(--text-color);
         }
-
+        
         .chip:hover {
             background-color: #e9ecef;
             border-color: #adb5bd;
+        }
+
+        .chip svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-color);
         }
     </style>
 </head>
 <body>
 
     <div class="chat-container">
-        <main class="message-list" id="messageList">
-            </main>
+        <main class="message-list" id="messageList"></main>
         <footer class="chat-input-area">
             <form class="chat-input-form" id="chatForm">
                 <input type="text" id="userInput" class="chat-input" placeholder="Ask something..." autocomplete="off">
@@ -242,10 +259,8 @@
 
     <df-messenger
       style="display: none;"
-      chat-title="Changemaker Dost"
       agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
       language-code="en"
-      location="asia-south1"
     ></df-messenger>
 
     <script>
@@ -259,8 +274,6 @@
         let persistentUserId = '';
 
         // --- INITIALIZATION ---
-
-        // Function to get or create a persistent user ID from browser's local storage
         function getOrCreateUserId() {
             let userId = localStorage.getItem('changemakerDost_userId');
             if (!userId) {
@@ -270,29 +283,21 @@
             return userId;
         }
 
-        // Set the session ID as soon as the script loads
         persistentUserId = getOrCreateUserId();
         dfMessenger.setAttribute('session-id', persistentUserId);
 
-        // Show the welcome screen on initial load
         showWelcomeScreen();
 
         // --- UI RENDERING FUNCTIONS ---
-
-        // Renders the initial welcome screen
         function showWelcomeScreen() {
             messageList.innerHTML = `
                 <div class="welcome-screen" id="welcomeScreen">
-                    <div class="welcome-top">
-                        <h1>Changemaker Dost</h1>
-                    </div>
+                    <div class="welcome-top"><h1>Changemaker Dost</h1></div>
                     <div class="welcome-middle">
                         <p class="darker">I’m your Changemaker Dost.</p>
                         <p>You can ask me anything about Ashoka, or we can start your Changemaker Index (CMI) assessment.</p>
                     </div>
-                    <div class="welcome-bottom">
-                        <div class="suggestion-chips" id="suggestionChips"></div>
-                    </div>
+                    <div class="welcome-bottom"><div class="suggestion-chips" id="suggestionChips"></div></div>
                 </div>
             `;
             const suggestionChipsContainer = document.getElementById('suggestionChips');
@@ -306,7 +311,6 @@
             });
         }
 
-        // Adds a user message to the chat
         function addUserMessage(text) {
             const messageElement = document.createElement('div');
             messageElement.className = 'message user';
@@ -315,77 +319,71 @@
             messageList.scrollTop = messageList.scrollHeight;
         }
 
-        // Adds a bot message or the typing indicator to the chat
         function addBotMessage(text) {
             const messageElement = document.createElement('div');
             messageElement.className = 'message bot';
-            messageElement.innerHTML = `<div class="message-content">${text}</div>`;
+            // Simple check to see if the text contains a link to make it clickable
+            const processedText = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+            messageElement.innerHTML = `<div class="message-content">${processedText}</div>`;
             messageList.appendChild(messageElement);
             messageList.scrollTop = messageList.scrollHeight;
             return messageElement;
         }
 
-        // Renders rich content like buttons and chips from Dialogflow
         function renderRichContent(richContent) {
+            const container = document.createElement('div');
+            container.className = 'suggestion-chips';
+
             richContent.forEach(row => {
-                const rowContainer = document.createElement('div');
-                rowContainer.className = 'suggestion-chips'; // Reuse chip container styling
                 row.forEach(item => {
-                    if (item.type === 'button') {
+                    if (item.type === 'button' && item.link) {
                         const button = document.createElement('a');
                         button.href = item.link;
                         button.target = '_blank';
                         button.className = 'chip';
-                        button.textContent = item.text;
-                        rowContainer.appendChild(button);
+                        if (item.icon) {
+                            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> <span>${item.text}</span>`;
+                        } else {
+                            button.textContent = item.text;
+                        }
+                        container.appendChild(button);
                     } else if (item.type === 'chips') {
                         item.options.forEach(option => {
                             const chip = document.createElement('div');
                             chip.className = 'chip';
                             chip.textContent = option.text;
                             chip.onclick = () => handleChipClick(option.text);
-                            rowContainer.appendChild(chip);
+                            container.appendChild(chip);
                         });
                     }
                 });
-                messageList.appendChild(rowContainer);
             });
+            messageList.appendChild(container);
             messageList.scrollTop = messageList.scrollHeight;
         }
-
+        
         // --- EVENT HANDLERS ---
-
-        // Handles form submission
-        async function handleFormSubmit(e) {
+        function handleFormSubmit(e) {
             e.preventDefault();
             const userMessage = userInput.value.trim();
             if (!userMessage) return;
 
-            // Clear welcome screen if it exists
             const welcomeScreen = document.getElementById('welcomeScreen');
-            if (welcomeScreen) {
-                messageList.innerHTML = '';
-            }
+            if (welcomeScreen) messageList.innerHTML = '';
 
             addUserMessage(userMessage);
             userInput.value = '';
-            
-            // Show typing indicator
             addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
 
-            // Send the message to Dialogflow
             dfMessenger.sendRequest('text', userMessage);
         }
 
-        // Handles clicking a suggestion chip
         function handleChipClick(text) {
             userInput.value = text;
             chatForm.dispatchEvent(new Event('submit', { bubbles: true }));
         }
 
-        // Handles the response from Dialogflow
         function handleDfResponse(event) {
-            // Remove the "thinking..." message
             const thinkingMessage = messageList.querySelector('.bot:last-child');
             if (thinkingMessage && thinkingMessage.querySelector('.typing-cursor')) {
                 thinkingMessage.remove();
@@ -397,31 +395,30 @@
 
             if (responses && responses.length > 0) {
                 responses.forEach(res => {
-                    if (res.text) {
+                    if (res.text && res.text.text.length > 0) {
                         fullText += res.text.text.join('\n') + '\n';
                     }
                     if (res.payload && res.payload.richContent) {
-                        richContent = res.payload.richContent[0]; // Assuming one rich content array
+                        richContent = res.payload.richContent[0];
                     }
                 });
             }
 
-            addBotMessage(fullText.trim() || "I'm not sure how to respond to that.");
+            if (fullText.trim()) {
+                addBotMessage(fullText.trim());
+            }
 
             if (richContent) {
                 renderRichContent(richContent);
             }
         }
-
-        // Handles the dashboard button click
+        
         function handleDashboardClick() {
             const welcomeScreen = document.getElementById('welcomeScreen');
-            if (welcomeScreen) {
-                messageList.innerHTML = '';
-            }
+            if (welcomeScreen) messageList.innerHTML = '';
             addUserMessage("Show me my dashboard");
             addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
-            dfMessenger.sendRequest('text', 'Show my dashboard');
+            dfMessenger.sendRequest('text', 'show my dashboard');
         }
 
         // --- ATTACHING EVENT LISTENERS ---
