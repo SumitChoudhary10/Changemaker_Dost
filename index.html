@@ -257,6 +257,8 @@
         </footer>
     </div>
 
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    
     <df-messenger
       style="display: none;"
       agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
@@ -322,7 +324,6 @@
         function addBotMessage(text) {
             const messageElement = document.createElement('div');
             messageElement.className = 'message bot';
-            // Simple check to see if the text contains a link to make it clickable
             const processedText = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
             messageElement.innerHTML = `<div class="message-content">${processedText}</div>`;
             messageList.appendChild(messageElement);
