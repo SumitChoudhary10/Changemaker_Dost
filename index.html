@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Changemaker Dost - Chat (FINAL DEBUG)</title>
+    <title>Changemaker Dost - Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@500&display=swap" rel="stylesheet">
@@ -49,14 +49,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const dfMessenger = document.querySelector('df-messenger');
             dfMessenger.addEventListener('df-messenger-loaded', function () {
-                console.log("✅ SUCCESS: 'df-messenger-loaded' event fired. Let's inspect the object.");
-                
-                // --- FINAL DIAGNOSTIC STEP 1 ---
-                // We will inspect the dfMessenger object right when the 'loaded' event fires.
-                console.log("Inspecting dfMessenger object state at load time:");
-                console.dir(dfMessenger);
-
-                // --- The rest of the setup code ---
                 const chatMessages = document.getElementById('chat-messages');
                 const userInput = document.getElementById('user-input');
                 const sendButton = document.getElementById('send-button');
@@ -73,9 +65,9 @@
                 sendButton.disabled = false;
                 userInput.placeholder = 'Message Changemaker Dost...';
 
-                const displayMessage = (text, type) => {
+                const displayBotMessage = (text) => {
                     const messageDiv = document.createElement('div');
-                    messageDiv.classList.add('message', `${type}-message`);
+                    messageDiv.classList.add('message', 'bot-message');
                     const contentDiv = document.createElement('div');
                     contentDiv.classList.add('message-content');
                     contentDiv.textContent = text;
@@ -87,22 +79,26 @@
                 const sendQuery = (query) => {
                     if (!query || query.trim() === '') return;
                     if (welcomeScreen.style.display !== 'none') { welcomeScreen.style.display = 'none'; }
-                    displayMessage(query, 'user');
                     
-                    // --- FINAL DIAGNOSTIC STEP 2 ---
-                    // We inspect the object again, right before we try to use it.
-                    console.log("Inspecting dfMessenger object state just before sendQuery call:");
-                    console.dir(dfMessenger);
+                    // --- THE FIX ---
+                    // Replace the failing sendQuery() with renderCustomText().
+                    // This function both displays the user message and sends the query.
+                    dfMessenger.renderCustomText(query); 
                     
-                    dfMessenger.sendQuery(query); 
                     userInput.value = '';
                 };
                 
                 sendButton.addEventListener('click', () => sendQuery(userInput.value));
                 userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); sendQuery(userInput.value); } });
                 welcomeChips.addEventListener('click', (event) => { if (event.target.classList.contains('chip')) { sendQuery(event.target.textContent); } });
+
+                // The response listener only needs to handle bot messages now.
                 dfMessenger.addEventListener('df-messenger-response-received', function (event) {
-                    event.detail.messages.forEach(msg => { if (msg.type === 'text') displayMessage(msg.text, 'bot'); });
+                    event.detail.messages.forEach(msg => {
+                        if (msg.type === 'text') {
+                            displayBotMessage(msg.text);
+                        }
+                    });
                 });
             });
         });
