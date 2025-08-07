@@ -381,6 +381,11 @@
                 userInput.value = '';
                 addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
 
+                // --- NEW DEBUGGING CODE ---
+                console.log("About to send query. Inspecting dfMessenger object below:", dfMessenger);
+                debugger; // This tells the browser to pause the code here.
+
+                // The line that is failing
                 dfMessenger.sendQuery({ text: userMessage });
             }
 
