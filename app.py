@@ -12,6 +12,7 @@ import faiss
 import pickle
 import numpy as np
 from google.cloud import dialogflow
+from fastapi.middleware.cors import CORSMiddleware
 
 # NOTE: We are no longer using the 'firebase-admin' library
 
@@ -46,6 +47,20 @@ QUESTION_BANK = {
 }
 
 app = FastAPI()
+
+origins = [
+    "https://sumitchoudhary10.github.io", # Your deployed frontend
+    "http://localhost",                  # For local testing
+    "http://127.0.0.1:8000",             # For local testing
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods
+    allow_headers=["*"], # Allows all headers
+)
 
 # --- Load Ashoka Q&A Data at Startup ---
 print("Loading FAISS index and text chunks for Ashoka Q&A...")

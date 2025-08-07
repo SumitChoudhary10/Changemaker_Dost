@@ -149,7 +149,11 @@
                 userInput.value = '';
 
                 try {
-                    const response = await fetch('/chat', {
+                    // --- THIS IS THE UPDATED PART ---
+                    // The URL now points directly to your deployed Render backend
+                    const apiUrl = 'https://changemaker-dost-api.onrender.com/chat';
+
+                    const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ message: query, session_id: sessionId })
