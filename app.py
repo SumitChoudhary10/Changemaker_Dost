@@ -2,8 +2,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi.middleware.cors import CORSMiddleware 
-import requests 
+import requests # We will use requests for database interaction
 from dotenv import load_dotenv
 import random
 import json
@@ -12,6 +11,8 @@ import google.generativeai as genai
 import faiss
 import pickle
 import numpy as np
+
+# NOTE: We are no longer using the 'firebase-admin' library
 
 load_dotenv()
 
@@ -44,20 +45,6 @@ QUESTION_BANK = {
 }
 
 app = FastAPI()
-
-# This allows your GitHub Pages website to make requests to this API
-origins = [
-    "https://sumitchoudhary10.github.io",
-    "http://localhost:8000", # For local testing
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods, including OPTIONS
-    allow_headers=["*"],
-)
 
 # --- Load Ashoka Q&A Data at Startup ---
 print("Loading FAISS index and text chunks for Ashoka Q&A...")
@@ -248,22 +235,9 @@ def generate_improvement_tips(assessment_data):
 @app.post("/dialogflow-webhook")
 async def dialogflow_webhook(request: dict):
     try:
-        # --- This is the new, smarter routing logic ---
+        intent_name = request['queryResult']['intent']['displayName']
         session_id = request['session']
         user_id = session_id.split('/')[-1]
-        user_question = request['queryResult']['queryText']
-        
-        # First, check if this is a CMI request based on keywords
-        cmi_keywords = ['cmi', 'Start CMI assessment', 'start cmi', 'Run CMI assessment again']
-        if any(keyword in user_question.lower() for keyword in cmi_keywords):
-            intent_name = "cmi_assessment_START"
-        else:
-            if 'intent' in request['queryResult']:
-                intent_name = request['queryResult']['intent']['displayName']
-            else:
-                intent_name = "ask_about_ashoka"
-        
-        # print(f"Routing to intent: {intent_name} for user: {user_id}")
         
         if "ask_about_ashoka" in intent_name:
             user_question = request['queryResult']['queryText']
