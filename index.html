@@ -270,7 +270,7 @@
         const sendButton = document.getElementById('sendButton');
         const messageList = document.getElementById('messageList');
         const dashboardButton = document.getElementById('dashboardButton');
-        const dfMessenger = document.querySelector('df-messenger');
+        const dfMessengerInitial = document.querySelector('df-messenger');
         
         // --- UI RENDERING FUNCTIONS ---
         function showWelcomeScreen() {
@@ -346,7 +346,7 @@
         }
         
         // --- MAIN LOGIC: Wait for df-messenger to be ready ---
-        dfMessenger.addEventListener('df-messenger-loaded', function (event) {
+        dfMessengerInitial.addEventListener('df-messenger-loaded', function (event) {
             let persistentUserId = '';
 
             function getOrCreateUserId() {
@@ -359,12 +359,16 @@
             }
 
             persistentUserId = getOrCreateUserId();
+            // Re-select the element to be safe
+            const dfMessenger = document.querySelector('df-messenger');
             dfMessenger.setAttribute('session-id', persistentUserId);
 
             showWelcomeScreen();
 
             // --- EVENT HANDLERS ---
             function handleSendMessage() {
+                // Re-acquire the element right before use
+                const dfMessenger = document.querySelector('df-messenger');
                 const userMessage = userInput.value.trim();
                 if (!userMessage) return;
 
@@ -414,6 +418,8 @@
             }
         
             function handleDashboardClick() {
+                // Re-acquire the element right before use
+                const dfMessenger = document.querySelector('df-messenger');
                 const welcomeScreen = document.getElementById('welcomeScreen');
                 if (welcomeScreen) messageList.innerHTML = '';
                 addUserMessage("Show me my dashboard");
@@ -429,7 +435,8 @@
                     handleSendMessage();
                 }
             });
-            dfMessenger.addEventListener('df-response-received', handleDfResponse);
+            // Re-select element for this listener too
+            document.querySelector('df-messenger').addEventListener('df-response-received', handleDfResponse);
             dashboardButton.addEventListener('click', handleDashboardClick);
         });
     </script>
