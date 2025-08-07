@@ -164,6 +164,11 @@
             font-size: 1rem;
             font-family: 'Inter', sans-serif;
         }
+        
+        #user-input:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
 
         #user-input:focus {
             outline: none;
@@ -189,8 +194,13 @@
             height: 44px;
             transition: background-color 0.2s;
         }
+        
+        #send-button:disabled {
+            background-color: #a1c7ff;
+            cursor: not-allowed;
+        }
 
-        #send-button:hover {
+        #send-button:not(:disabled):hover {
             background-color: #0b5ed7;
         }
     </style>
@@ -220,8 +230,8 @@
                 <a href="dashboard.html" class="dashboard-button" title="Open Dashboard">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8a6 6 0 0 0-8.4 0"/><path d="M14.3 12a2 2 0 0 0-2.6 0"/></svg>
                 </a>
-                <input type="text" id="user-input" placeholder="Message Changemaker Dost...">
-                <button id="send-button" title="Send Message">
+                <input type="text" id="user-input" placeholder="Initializing chat..." disabled>
+                <button id="send-button" title="Send Message" disabled>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
             </div>
@@ -248,7 +258,6 @@
             const welcomeScreen = document.getElementById('welcome-screen');
             const welcomeChips = document.getElementById('welcome-chips');
 
-            // --- Session ID Management ---
             /**
              * Gets a persistent user ID from local storage, or creates a new one.
              * @returns {string} The persistent user ID.
@@ -262,82 +271,85 @@
                 return userId;
             }
 
-            // --- Event Listener for Dialogflow Messenger ---
+            // --- THE FIX IS HERE ---
+            // We wait for the 'df-messenger-loaded' event before setting up
+            // any functions or event listeners that depend on it.
             dfMessenger.addEventListener('df-messenger-loaded', function () {
-              const persistentUserId = getOrCreateUserId();
-              dfMessenger.setAttribute('session-id', persistentUserId);
-              console.log('Dialogflow session initialized with User ID:', persistentUserId);
-            });
+                // Initialize session
+                const persistentUserId = getOrCreateUserId();
+                dfMessenger.setAttribute('session-id', persistentUserId);
+                console.log('Dialogflow session initialized with User ID:', persistentUserId);
 
-            /**
-             * Sends a query to the Dialogflow agent.
-             * @param {string} query The text to send.
-             */
-            const sendQuery = (query) => {
-                if (!query || query.trim() === '') return;
+                // Now that the chat is ready, enable the input and change placeholder
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.placeholder = 'Message Changemaker Dost...';
 
-                // If the welcome screen is visible, hide it.
-                if (welcomeScreen.style.display !== 'none') {
-                    welcomeScreen.style.display = 'none';
-                }
+                /**
+                 * Displays a message in the chat window.
+                 * @param {string} text The message text.
+                 * @param {string} type 'user' or 'bot'.
+                 */
+                const displayMessage = (text, type) => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', `${type}-message`);
 
-                // Display the user's message and send the query to Dialogflow
-                displayMessage(query, 'user');
-                dfMessenger.sendQuery(query);
-                userInput.value = ''; // Clear the input field
-            };
+                    const contentDiv = document.createElement('div');
+                    contentDiv.classList.add('message-content');
+                    contentDiv.textContent = text;
+                    
+                    messageDiv.appendChild(contentDiv);
+                    chatMessages.appendChild(messageDiv);
 
-            /**
-             * Displays a message in the chat window.
-             * @param {string} text The message text.
-             * @param {string} type 'user' or 'bot'.
-             */
-            const displayMessage = (text, type) => {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', `${type}-message`);
-
-                const contentDiv = document.createElement('div');
-                contentDiv.classList.add('message-content');
-                contentDiv.textContent = text;
+                    // Scroll to the latest message
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                };
                 
-                messageDiv.appendChild(contentDiv);
-                chatMessages.appendChild(messageDiv);
+                /**
+                 * Sends a query to the Dialogflow agent.
+                 * @param {string} query The text to send.
+                 */
+                const sendQuery = (query) => {
+                    if (!query || query.trim() === '') return;
 
-                // Scroll to the latest message
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            };
-            
-            // --- Event Listener for receiving messages from Dialogflow ---
-            dfMessenger.addEventListener('df-messenger-response-received', function (event) {
-                const responseMessages = event.detail.messages;
-                
-                for (const msg of responseMessages) {
-                    // We'll handle simple text responses for now.
-                    // You can expand this to handle cards, chips, etc.
-                    if (msg.type === 'text') {
-                        displayMessage(msg.text, 'bot');
+                    // If the welcome screen is visible, hide it.
+                    if (welcomeScreen.style.display !== 'none') {
+                        welcomeScreen.style.display = 'none';
                     }
-                }
+
+                    displayMessage(query, 'user');
+                    dfMessenger.sendQuery(query); // This will now work reliably
+                    userInput.value = '';
+                };
+
+                // --- User Input Event Handlers (now safely inside the 'loaded' event) ---
+                sendButton.addEventListener('click', () => sendQuery(userInput.value));
+
+                userInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        sendQuery(userInput.value);
+                    }
+                });
+
+                welcomeChips.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('chip')) {
+                        const query = event.target.textContent;
+                        sendQuery(query);
+                    }
+                });
+
+                // --- Event Listener for receiving messages from Dialogflow ---
+                dfMessenger.addEventListener('df-messenger-response-received', function (event) {
+                    const responseMessages = event.detail.messages;
+                    
+                    for (const msg of responseMessages) {
+                        if (msg.type === 'text') {
+                            displayMessage(msg.text, 'bot');
+                        }
+                    }
+                });
             });
-
-            // --- User Input Event Handlers ---
-            sendButton.addEventListener('click', () => sendQuery(userInput.value));
-
-            userInput.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault(); // Prevent new line on Enter
-                    sendQuery(userInput.value);
-                }
-            });
-
-            // Handle clicks on the initial welcome chips
-            welcomeChips.addEventListener('click', (event) => {
-                if (event.target.classList.contains('chip')) {
-                    const query = event.target.textContent;
-                    sendQuery(query);
-                }
-            });
-
         });
     </script>
 
