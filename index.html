@@ -150,7 +150,7 @@
             flex-shrink: 0;
         }
 
-        .chat-input-form {
+        .chat-input-wrapper {
             display: flex;
             gap: 0.75rem;
             align-items: center;
@@ -245,15 +245,15 @@
     <div class="chat-container">
         <main class="message-list" id="messageList"></main>
         <footer class="chat-input-area">
-            <form class="chat-input-form" id="chatForm">
+            <div class="chat-input-wrapper">
                 <input type="text" id="userInput" class="chat-input" placeholder="Ask something..." autocomplete="off">
-                <button type="submit" class="icon-button" title="Send">
+                <button type="button" id="sendButton" class="icon-button" title="Send">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
                 <button type="button" class="icon-button dashboard-button" id="dashboardButton" title="View Dashboard">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>
                 </button>
-            </form>
+            </div>
         </footer>
     </div>
     
@@ -266,13 +266,13 @@
 
     <script>
         // --- DOM Element References ---
-        const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
         const messageList = document.getElementById('messageList');
         const dashboardButton = document.getElementById('dashboardButton');
         const dfMessenger = document.querySelector('df-messenger');
         
-        // --- UI RENDERING FUNCTIONS (can be defined globally) ---
+        // --- UI RENDERING FUNCTIONS ---
         function showWelcomeScreen() {
             messageList.innerHTML = `
                 <div class="welcome-screen" id="welcomeScreen">
@@ -345,11 +345,6 @@
             messageList.scrollTop = messageList.scrollHeight;
         }
         
-        function handleChipClick(text) {
-            userInput.value = text;
-            chatForm.dispatchEvent(new Event('submit', { bubbles: true }));
-        }
-        
         // --- MAIN LOGIC: Wait for df-messenger to be ready ---
         dfMessenger.addEventListener('df-messenger-loaded', function (event) {
             let persistentUserId = '';
@@ -369,8 +364,7 @@
             showWelcomeScreen();
 
             // --- EVENT HANDLERS ---
-            function handleFormSubmit(e) {
-                e.preventDefault();
+            function handleSendMessage() {
                 const userMessage = userInput.value.trim();
                 if (!userMessage) return;
 
@@ -381,12 +375,12 @@
                 userInput.value = '';
                 addBotMessage(`<div class="typing-cursor"></div><div class="typing-cursor"></div><div class="typing-cursor"></div>`);
 
-                // --- NEW DEBUGGING CODE ---
-                console.log("About to send query. Inspecting dfMessenger object below:", dfMessenger);
-                debugger; // This tells the browser to pause the code here.
-
-                // The line that is failing
                 dfMessenger.sendQuery({ text: userMessage });
+            }
+            
+            function handleChipClick(text) {
+                userInput.value = text;
+                handleSendMessage();
             }
 
             function handleDfResponse(event) {
@@ -429,7 +423,12 @@
             }
 
             // --- ATTACHING EVENT LISTENERS ---
-            chatForm.addEventListener('submit', handleFormSubmit);
+            sendButton.addEventListener('click', handleSendMessage);
+            userInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    handleSendMessage();
+                }
+            });
             dfMessenger.addEventListener('df-response-received', handleDfResponse);
             dashboardButton.addEventListener('click', handleDashboardClick);
         });
