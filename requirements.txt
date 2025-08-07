@@ -6,3 +6,4 @@ google-generativeai
 python-dotenv
 spacy
 requests
+google-cloud-dialogflow

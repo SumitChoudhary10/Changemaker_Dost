@@ -1,8 +1,8 @@
 # FILE: app.py (Final Version with Firestore REST API)
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
-import requests # We will use requests for database interaction
+import requests 
 from dotenv import load_dotenv
 import random
 import json
@@ -11,6 +11,7 @@ import google.generativeai as genai
 import faiss
 import pickle
 import numpy as np
+from google.cloud import dialogflow
 
 # NOTE: We are no longer using the 'firebase-admin' library
 
@@ -230,6 +231,33 @@ def generate_improvement_tips(assessment_data):
     response = model.generate_content(prompt)
     return response.text
 
+# --- API Endpoints ---
+@app.post("/chat")
+async def chat(request: Request):
+    body = await request.json()
+    user_message = body.get('message')
+    session_id = body.get('session_id')
+    language_code = "en-US" # Common practice to use region code
+
+    if not user_message or not session_id:
+        return JSONResponse(status_code=400, content={"error": "Message and session_id are required."})
+
+    try:
+        session_client = dialogflow.SessionsClient()
+        session = session_client.session_path(PROJECT_ID, session_id)
+        text_input = dialogflow.TextInput(text=user_message, language_code=language_code)
+        query_input = dialogflow.QueryInput(text=text_input)
+
+        response = session_client.detect_intent(session=session, query_input=query_input)
+
+        # We pass the full, rich fulfillment messages back to the front-end
+        fulfillment_messages = [
+            json.loads(json.dumps(m, default=str)) for m in response.query_result.fulfillment_messages
+        ]
+        return JSONResponse(content={"fulfillmentMessages": fulfillment_messages})
+    except Exception as e:
+        print(f"Error in /chat endpoint: {e}")
+        return JSONResponse(status_code=500, content={"error": "An internal error occurred."})
 
 # --- API Endpoints ---
 @app.post("/dialogflow-webhook")
@@ -427,4 +455,5 @@ async def get_user_history(user_id: str):
 
 @app.get("/")
 def read_root():
-    return {"message": "Ashoka Bot Backend is running!"}
+    # This will now serve your main chat interface at the root URL
+    return FileResponse('index.html')
