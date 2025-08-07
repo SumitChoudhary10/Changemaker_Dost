@@ -3,215 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Changemaker Dost - Chat</title>
+    <title>Changemaker Dost - Chat (DEBUG)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@500&display=swap" rel="stylesheet">
     
     <style>
-        /* General Body and Font Setup */
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: #f8f9fa;
-            color: #212529;
-            overflow: hidden; /* Prevents scrolling the whole page */
-        }
-
-        /* Main Chat Container */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100%;
-            max-width: 800px; /* Max width for larger screens */
-            margin: 0 auto;   /* Center the container */
-            background-color: #ffffff;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Header Styling */
-        .chat-header {
-            padding: 1rem 1.5rem;
-            background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
-            flex-shrink: 0;
-        }
-
-        .chat-header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #0d6efd; /* Your brand blue */
-        }
-
-        /* Main Messages Area */
-        .chat-messages {
-            flex-grow: 1;
-            overflow-y: auto; /* Allow scrolling for messages */
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Welcome Screen Styling */
-        .welcome-screen {
-            margin: auto;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .welcome-text p {
-            font-family: 'Lora', serif; /* Premium serif font for the main welcome line */
-            font-size: 2.25rem;
-            font-weight: 500;
-            margin: 0;
-            color: #0d6efd;
-        }
-
-        .welcome-text span {
-            font-size: 1.1rem;
-            color: #495057;
-            margin-top: 0.5rem;
-            display: block;
-            max-width: 450px;
-        }
-
-        .welcome-chips {
-            margin-top: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .chip {
-            background-color: #f1f3f5;
-            border: 1px solid #dee2e6;
-            border-radius: 20px;
-            padding: 0.75rem 1.25rem;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-
-        .chip:hover {
-            background-color: #e9ecef;
-            border-color: #ced4da;
-        }
-
-
-        /* Chat Message Bubbles */
-        .message {
-            display: flex;
-            margin-bottom: 1rem;
-            max-width: 75%;
-        }
-
-        .message-content {
-            padding: 0.75rem 1.25rem;
-            border-radius: 1.25rem;
-            line-height: 1.5;
-        }
-
-        /* Bot Messages */
-        .bot-message {
-            align-self: flex-start;
-        }
-
-        .bot-message .message-content {
-            background-color: #f1f3f5;
-            color: #212529;
-            border-top-left-radius: 0.25rem;
-        }
-
-        /* User Messages */
-        .user-message {
-            align-self: flex-end;
-        }
-
-        .user-message .message-content {
-            background-color: #0d6efd;
-            color: #ffffff;
-            border-top-right-radius: 0.25rem;
-        }
-
-
-        /* Input Area Footer */
-        .chat-input-area {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid #e9ecef;
-            background-color: #fff;
-            flex-shrink: 0;
-        }
-
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        #user-input {
-            flex-grow: 1;
-            border: none;
-            background-color: #f1f3f5;
-            border-radius: 10px;
-            padding: 0.85rem 1rem;
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        #user-input:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-
-        #user-input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
-        }
-
-        .dashboard-button, #send-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            color: #495057;
-        }
-
-        #send-button {
-            background-color: #0d6efd;
-            color: white;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            transition: background-color 0.2s;
-        }
-        
-        #send-button:disabled {
-            background-color: #a1c7ff;
-            cursor: not-allowed;
-        }
-
-        #send-button:not(:disabled):hover {
-            background-color: #0b5ed7;
-        }
+        /* CSS is unchanged */
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; overflow: hidden; }
+        .chat-container { display: flex; flex-direction: column; height: 100vh; width: 100%; max-width: 800px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); }
+        .chat-header { padding: 1rem 1.5rem; background-color: #fff; border-bottom: 1px solid #e9ecef; flex-shrink: 0; }
+        .chat-header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #0d6efd; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; }
+        .welcome-screen { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .welcome-text p { font-family: 'Lora', serif; font-size: 2.25rem; font-weight: 500; margin: 0; color: #0d6efd; }
+        .welcome-text span { font-size: 1.1rem; color: #495057; margin-top: 0.5rem; display: block; max-width: 450px; }
+        .welcome-chips { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .chip { background-color: #f1f3f5; border: 1px solid #dee2e6; border-radius: 20px; padding: 0.75rem 1.25rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .chip:hover { background-color: #e9ecef; border-color: #ced4da; }
+        .message { display: flex; margin-bottom: 1rem; max-width: 75%; }
+        .message-content { padding: 0.75rem 1.25rem; border-radius: 1.25rem; line-height: 1.5; }
+        .bot-message { align-self: flex-start; }
+        .bot-message .message-content { background-color: #f1f3f5; color: #212529; border-top-left-radius: 0.25rem; }
+        .user-message { align-self: flex-end; }
+        .user-message .message-content { background-color: #0d6efd; color: #ffffff; border-top-right-radius: 0.25rem; }
+        .chat-input-area { padding: 1rem 1.5rem; border-top: 1px solid #e9ecef; background-color: #fff; flex-shrink: 0; }
+        .input-wrapper { display: flex; align-items: center; gap: 0.75rem; }
+        #user-input { flex-grow: 1; border: none; background-color: #f1f3f5; border-radius: 10px; padding: 0.85rem 1rem; font-size: 1rem; font-family: 'Inter', sans-serif; }
+        #user-input:disabled { background-color: #e9ecef; cursor: not-allowed; }
+        #user-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); }
+        .dashboard-button, #send-button { display: flex; align-items: center; justify-content: center; background: none; border: none; padding: 0.5rem; cursor: pointer; color: #495057; }
+        #send-button { background-color: #0d6efd; color: white; border-radius: 50%; width: 44px; height: 44px; transition: background-color 0.2s; }
+        #send-button:disabled { background-color: #a1c7ff; cursor: not-allowed; }
+        #send-button:not(:disabled):hover { background-color: #0b5ed7; }
     </style>
 </head>
 <body>
 
     <div class="chat-container">
-        <header class="chat-header">
-            <h1>Changemaker Dost</h1>
-        </header>
-
+        <header class="chat-header"><h1>Changemaker Dost</h1></header>
         <main class="chat-messages" id="chat-messages">
             <div class="welcome-screen" id="welcome-screen">
                 <div class="welcome-text">
@@ -223,17 +53,12 @@
                     <button class="chip">Start CMI assessment</button>
                 </div>
             </div>
-            </main>
-
+        </main>
         <footer class="chat-input-area">
             <div class="input-wrapper">
-                <a href="dashboard.html" class="dashboard-button" title="Open Dashboard">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8a6 6 0 0 0-8.4 0"/><path d="M14.3 12a2 2 0 0 0-2.6 0"/></svg>
-                </a>
+                <a href="dashboard.html" class="dashboard-button" title="Open Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8a6 6 0 0 0-8.4 0"/><path d="M14.3 12a2 2 0 0 0-2.6 0"/></svg></a>
                 <input type="text" id="user-input" placeholder="Initializing chat..." disabled>
-                <button id="send-button" title="Send Message" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
+                <button id="send-button" title="Send Message" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
             </div>
         </footer>
     </div>
@@ -248,107 +73,85 @@
     ></df-messenger>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        console.log("DEBUG: Page script block has started.");
 
-            // --- DOM Element Selection ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DEBUG: DOMContentLoaded event fired. Selecting elements.");
+
             const dfMessenger = document.querySelector('df-messenger');
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
             const welcomeScreen = document.getElementById('welcome-screen');
             const welcomeChips = document.getElementById('welcome-chips');
+            
+            console.log("DEBUG: Elements selected. Adding event listener for 'df-messenger-loaded'.");
 
-            /**
-             * Gets a persistent user ID from local storage, or creates a new one.
-             * @returns {string} The persistent user ID.
-             */
-            function getOrCreateUserId() {
-                let userId = localStorage.getItem('changemakerDost_userId');
-                if (!userId) {
-                    userId = crypto.randomUUID();
-                    localStorage.setItem('changemakerDost_userId', userId);
-                }
-                return userId;
-            }
-
-            // --- THE FIX IS HERE ---
-            // We wait for the 'df-messenger-loaded' event before setting up
-            // any functions or event listeners that depend on it.
             dfMessenger.addEventListener('df-messenger-loaded', function () {
-                // Initialize session
+                console.log("✅ SUCCESS: 'df-messenger-loaded' event fired. Setting up chat.");
+
+                function getOrCreateUserId() {
+                    let userId = localStorage.getItem('changemakerDost_userId');
+                    if (!userId) {
+                        userId = crypto.randomUUID();
+                        localStorage.setItem('changemakerDost_userId', userId);
+                    }
+                    return userId;
+                }
                 const persistentUserId = getOrCreateUserId();
                 dfMessenger.setAttribute('session-id', persistentUserId);
-                console.log('Dialogflow session initialized with User ID:', persistentUserId);
+                console.log('DEBUG: Session ID set:', persistentUserId);
 
-                // Now that the chat is ready, enable the input and change placeholder
                 userInput.disabled = false;
                 sendButton.disabled = false;
                 userInput.placeholder = 'Message Changemaker Dost...';
+                console.log("DEBUG: Inputs have been enabled.");
 
-                /**
-                 * Displays a message in the chat window.
-                 * @param {string} text The message text.
-                 * @param {string} type 'user' or 'bot'.
-                 */
                 const displayMessage = (text, type) => {
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message', `${type}-message`);
-
                     const contentDiv = document.createElement('div');
                     contentDiv.classList.add('message-content');
                     contentDiv.textContent = text;
-                    
                     messageDiv.appendChild(contentDiv);
                     chatMessages.appendChild(messageDiv);
-
-                    // Scroll to the latest message
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 };
                 
-                /**
-                 * Sends a query to the Dialogflow agent.
-                 * @param {string} query The text to send.
-                 */
                 const sendQuery = (query) => {
+                    console.log("DEBUG: sendQuery function called with:", query);
                     if (!query || query.trim() === '') return;
-
-                    // If the welcome screen is visible, hide it.
                     if (welcomeScreen.style.display !== 'none') {
                         welcomeScreen.style.display = 'none';
                     }
-
                     displayMessage(query, 'user');
-                    dfMessenger.sendQuery(query); // This will now work reliably
+                    dfMessenger.sendQuery(query); 
                     userInput.value = '';
                 };
 
-                // --- User Input Event Handlers (now safely inside the 'loaded' event) ---
+                console.log("DEBUG: Setting up click and keydown event listeners.");
                 sendButton.addEventListener('click', () => sendQuery(userInput.value));
-
                 userInput.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         sendQuery(userInput.value);
                     }
                 });
-
                 welcomeChips.addEventListener('click', (event) => {
                     if (event.target.classList.contains('chip')) {
                         const query = event.target.textContent;
                         sendQuery(query);
                     }
                 });
-
-                // --- Event Listener for receiving messages from Dialogflow ---
                 dfMessenger.addEventListener('df-messenger-response-received', function (event) {
                     const responseMessages = event.detail.messages;
-                    
                     for (const msg of responseMessages) {
                         if (msg.type === 'text') {
                             displayMessage(msg.text, 'bot');
                         }
                     }
                 });
+                console.log("DEBUG: All event listeners are now active.");
             });
         });
     </script>
