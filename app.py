@@ -51,7 +51,7 @@ app = FastAPI()
 origins = [
     "https://sumitchoudhary10.github.io", # Your deployed frontend
     "http://localhost",                  # For local testing
-    "http://127.0.0.1:8000",             # For local testing
+    "http://127.0.0.1:8000",             
 ]
 
 app.add_middleware(
