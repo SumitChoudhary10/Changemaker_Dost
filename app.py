@@ -32,7 +32,7 @@ try:
     if not PROJECT_ID:
         raise ValueError("Could not find 'project_id' in serviceAccountKey.json")
 except FileNotFoundError:
-    raise FileNotFoundError("serviceAccountKey.json not found. It is needed to get your Project ID.")
+    raise FileNotFoundError("serviceAccountKey.json not found.")
 
 # Define model names
 EMBEDDING_MODEL_NAME = "text-embedding-004"
