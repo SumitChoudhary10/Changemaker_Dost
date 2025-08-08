@@ -3,185 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Changemaker Dost - Chat</title>
+    <title>Changemaker Dost - Chatbot Demo</title>
+    <!-- Google Fonts for a cleaner look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; overflow: hidden; }
-        .chat-container { display: flex; flex-direction: column; height: 100vh; width: 100%; max-width: 800px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); }
-        .chat-header { padding: 1rem 1.5rem; background-color: #fff; border-bottom: 1px solid #e9ecef; flex-shrink: 0; }
-        .chat-header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #0d6efd; }
-        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; }
-        .welcome-screen { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .welcome-text p { font-family: 'Lora', serif; font-size: 2.25rem; font-weight: 500; margin: 0; color: #0d6efd; }
-        .welcome-text span { font-size: 1.1rem; color: #495057; margin-top: 0.5rem; display: block; max-width: 450px; }
-        .chat-chips-container { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 0.5rem; padding-left: 1.5rem; margin-top: 0.5rem; }
-        .chip { background-color: #e9ecef; border: 1px solid #dee2e6; border-radius: 20px; padding: 0.5rem 1rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
-        .chip:hover { background-color: #d8dde2; }
-        .message { display: flex; margin-bottom: 1rem; max-width: 85%; }
-        .message-content { padding: 0.75rem 1.25rem; border-radius: 1.25rem; line-height: 1.5; word-wrap: break-word; }
-        .bot-message { align-self: flex-start; }
-        .bot-message .message-content { background-color: #f1f3f5; color: #212529; border-top-left-radius: 0.25rem; }
-        .user-message { align-self: flex-end; }
-        .user-message .message-content { background-color: #0d6efd; color: #ffffff; border-top-right-radius: 0.25rem; }
-        .dashboard-link-button { display: inline-flex; align-items: center; text-decoration: none; background-color: #0d6efd; color: white; padding: 10px 15px; border-radius: 8px; font-weight: 500; margin-top: 10px; transition: background-color 0.2s ease; }
-        .dashboard-link-button:hover { background-color: #0b5ed7; }
-        .dashboard-link-button span { margin-right: 8px; }
-        .chat-input-area { padding: 1rem 1.5rem; border-top: 1px solid #e9ecef; background-color: #fff; flex-shrink: 0; }
-        .input-wrapper { display: flex; align-items: center; gap: 0.75rem; }
-        #user-input { flex-grow: 1; border: none; background-color: #f1f3f5; border-radius: 10px; padding: 0.85rem 1rem; font-size: 1rem; font-family: 'Inter', sans-serif; }
-        #user-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); }
-        .dashboard-button, #send-button { display: flex; align-items: center; justify-content: center; background: none; border: none; padding: 0.5rem; cursor: pointer; color: #495057; }
-        #send-button { background-color: #0d6efd; color: white; border-radius: 50%; width: 44px; height: 44px; transition: background-color 0.2s; }
-        #send-button:not(:disabled):hover { background-color: #0b5ed7; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa; /* Softer background color */
+            color: #212529;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #0d6efd; /* A vibrant blue */
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #495057;
+            margin-bottom: 2rem;
+        }
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        /* Styling for the Dialogflow widget */
+        df-messenger {
+          --df-messenger-bot-message: #f8f9fa;
+          --df-messenger-button-titlebar-color: #0d6efd;
+          --df-messenger-font-color: #212529;
+        }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <header class="chat-header"><h1>Changemaker Dost</h1></header>
-        <main class="chat-messages" id="chat-messages">
-            <div class="welcome-screen" id="welcome-screen">
-                <div class="welcome-text"><p>I’m your Changemaker Dost.</p><span>You can ask me anything about Ashoka, or we can start your CMI assessment.</span></div>
-                <div class="chat-chips-container" id="welcome-chips">
-                    <button class="chip">Want to know about Ashoka young changemakers</button>
-                    <button class="chip">Start CMI assessment</button>
-                </div>
-            </div>
-        </main>
-        <footer class="chat-input-area">
-            <div class="input-wrapper">
-                <a href="/dashboard" class="dashboard-button" title="Open Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8a6 6 0 0 0-8.4 0"/><path d="M14.3 12a2 2 0 0 0-2.6 0"/></svg></a>
-                <input type="text" id="user-input" placeholder="Message Changemaker Dost...">
-                <button id="send-button" title="Send Message"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-            </div>
-        </footer>
+
+    <div class="container">
+        <h1>Changemaker Dost</h1>
+        <p>Your AI-powered companion to strengthen changemaking skills and increase youth employability. Click the chat icon to begin.</p>
     </div>
 
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    <df-messenger
+      chat-title="Changemaker Dost"
+      agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
+      language-code="en"
+      location="asia-south1"
+      expand="true"
+    ></df-messenger>
+
+    <div class="footer">
+        <p>Powered by Dialogflow and Google AI</p>
+    </div>
+
+    <!-- This script provides full control over the welcome experience, styling, AND persistent user ID -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const chatMessages = document.getElementById('chat-messages');
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const welcomeScreen = document.getElementById('welcome-screen');
-            const welcomeChips = document.getElementById('welcome-chips');
-            
-            let sessionId = getOrCreateUserId();
+      const dfMessenger = document.querySelector('df-messenger');
 
-            function getOrCreateUserId() {
-                let userId = localStorage.getItem('changemakerDost_userId');
-                if (!userId) {
-                    userId = `user_${Math.random().toString(36).substring(2, 15)}`;
-                    localStorage.setItem('changemakerDost_userId', userId);
+      // Function to get or create a persistent user ID from browser's local storage
+      function getOrCreateUserId() {
+          let userId = localStorage.getItem('changemakerDost_userId');
+          if (!userId) {
+              userId = 'user_' + Math.random().toString(36).substring(2, 15);
+              localStorage.setItem('changemakerDost_userId', userId);
+          }
+          return userId;
+      }
+
+      // This event fires once the Dialogflow Messenger widget is ready
+      dfMessenger.addEventListener('df-messenger-loaded', function (event) {
+
+        // Set the persistent session ID
+        const persistentUserId = getOrCreateUserId();
+        dfMessenger.setAttribute('session-id', persistentUserId);
+        console.log('Persistent User ID set:', persistentUserId);
+
+        // Define the payload for the welcome card
+        const welcomePayload = [
+            {
+              "type": "info",
+              "title": "I’m your Changemaker Dost.",
+              "subtitle": "You can ask me anything about Ashoka, or we can start your CMI assessment.",
+            },
+            {
+              "type": "chips",
+              "options": [
+                {
+                  "text": "Want to know about Ashoka young changemakers"
+                },
+                {
+                  "text": "Start CMI assessment"
                 }
-                return userId;
+              ]
             }
+          ];
 
-            function displayMessage(text, type) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', `${type}-message`);
-                const contentDiv = document.createElement('div');
-                contentDiv.classList.add('message-content');
-                contentDiv.textContent = text;
-                messageDiv.appendChild(contentDiv);
-                chatMessages.appendChild(messageDiv);
-                scrollToBottom();
-            }
+        // Use renderCustomCard to display our welcome message in a card
+        dfMessenger.renderCustomCard(welcomePayload);
 
-            function removeAllChipContainers() {
-                document.querySelectorAll('.chat-chips-container').forEach(el => el.remove());
-            }
+        // Apply custom styling
+        try {
+            const chatWrapper = dfMessenger.shadowRoot.querySelector('df-messenger-chat');
+            const style = document.createElement('style');
 
-            function displayRichContent(fulfillmentMessages) {
-                removeAllChipContainers(); // Clear previous chips
-                const chipsContainer = document.createElement('div');
-                chipsContainer.className = 'chat-chips-container';
-
-                fulfillmentMessages.forEach(message => {
-                    if (message.text && message.text.text) {
-                        displayMessage(message.text.text.join('\n'), 'bot');
-                    }
-                    if (message.payload && message.payload.richContent) {
-                        message.payload.richContent.forEach(row => {
-                            row.forEach(item => {
-                                if (item.type === 'chips') {
-                                    item.options.forEach(option => {
-                                        const chip = document.createElement('button');
-                                        chip.className = 'chip';
-                                        chip.textContent = option.text;
-                                        chip.onclick = () => sendQuery(option.text);
-                                        chipsContainer.appendChild(chip);
-                                    });
-                                }
-                                if (item.type === 'button') {
-                                    const button = document.createElement('a');
-                                    button.className = 'dashboard-link-button';
-                                    button.href = item.link;
-                                    button.target = '_blank'; // Open in new tab
-                                    button.innerHTML = `<span>${item.text}</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>`;
-                                    // Append the button inside the last bot message for context
-                                    const lastMessage = chatMessages.querySelector('.message:last-child .message-content');
-                                    if(lastMessage) lastMessage.appendChild(button);
-                                }
-                            });
-                        });
-                    }
-                });
-                if (chipsContainer.hasChildNodes()) {
-                    chatMessages.appendChild(chipsContainer);
+            style.textContent = `
+                .header { border: none !important; }
+                #messageList .message-list-wrapper {
+                    justify-content: flex-start;
+                    padding-top: 25%;
                 }
-                scrollToBottom();
-            }
+            `;
 
-            function scrollToBottom() {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
+            chatWrapper.shadowRoot.appendChild(style);
 
-            async function sendQuery(query) {
-                if (!query || query.trim() === '') return;
-                
-                removeAllChipContainers();
-                if (welcomeScreen.style.display !== 'none') {
-                    welcomeScreen.style.display = 'none';
-                }
-
-                displayMessage(query, 'user');
-                userInput.value = '';
-
-                try {
-                    // --- THIS IS THE UPDATED PART ---
-                    // The URL now points directly to your deployed Render backend
-                    const apiUrl = 'https://changemaker-dost-api.onrender.com';
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: query, session_id: sessionId })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Server error: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    if (data.fulfillmentMessages) {
-                        displayRichContent(data.fulfillmentMessages);
-                    }
-
-                } catch (error) {
-                    console.error('Error fetching chatbot response:', error);
-                    displayMessage('Sorry, I seem to be having trouble connecting. Please try again later.', 'bot');
-                }
-            }
-
-            sendButton.addEventListener('click', () => sendQuery(userInput.value));
-            userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); sendQuery(userInput.value); } });
-            welcomeChips.addEventListener('click', (event) => {
-                if (event.target.classList.contains('chip')) {
-                    sendQuery(event.target.textContent);
-                }
-            });
-        });
+        } catch(e) {
+            console.error("Could not apply custom styles:", e);
+        }
+      });
     </script>
+
 </body>
 </html>

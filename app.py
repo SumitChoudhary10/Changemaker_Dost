@@ -258,8 +258,6 @@ async def chat(request: Request):
         return JSONResponse(status_code=400, content={"error": "Message and session_id are required."})
 
     try:
-        print(f"DEBUG: Attempting to run detect_intent for project: {PROJECT_ID} and session: {session_id}")
-        
         session_client = dialogflow.SessionsClient()
         session = session_client.session_path(PROJECT_ID, session_id)
         text_input = dialogflow.TextInput(text=user_message, language_code=language_code)
