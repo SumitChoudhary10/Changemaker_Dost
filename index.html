@@ -31,23 +31,11 @@
             text-align: center;
             z-index: 10000;
         }
+
         .banner h2 {
             margin: 0;
             font-size: 2.5rem;
             font-weight: 700;
-        }
-
-        .info{
-            position: fixed;
-            top: 60%; /* Moved up slightly */
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #f8f9fa;
-            color: black;
-            padding: 2rem 3rem;
-            border-radius: 16px;
-            text-align: center;
-            z-index: 10000;
         }
 
         /* Basic styling for the df-messenger component */
@@ -67,11 +55,6 @@
     
     <div class="banner" id="welcome-banner">
       <h2>Changemaker Dost</h2>
-    </div>
-
-    <div class="info">
-      <p style="font-size: 1.5rem; font-weight: 200;">I’m your Changemaker Dost.</p>
-      <p>You can ask me anything about Ashoka, or we can start your <br>Changemaker Index (CMI) assessment.</p>
     </div>
     
     <df-messenger
@@ -100,6 +83,11 @@
         dfMessenger.setAttribute('session-id', persistentUserId);
         
         const welcomePayload = [
+            {
+              "type": "info",
+              "title": "I’m your Changemaker Dost.",
+              "subtitle": "You can ask me anything about Ashoka, or we can start your Changemaker Index (CMI) assessment.",
+            },
             {
               "type": "chips",
               "options": [
