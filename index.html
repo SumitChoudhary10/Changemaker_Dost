@@ -18,19 +18,64 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Centered welcome banner */
+        .banner {
+            position: fixed;
+            top: 40%; /* Moved up slightly */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            padding: 2rem 3rem;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 10000;
+        }
+        .banner h2 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .info{
+            position: fixed;
+            top: 60%; /* Moved up slightly */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f8f9fa;
+            color: black;
+            padding: 2rem 3rem;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 10000;
+        }
+
         /* Basic styling for the df-messenger component */
         df-messenger {
-          --df-messenger-bot-message: #f8f9fa;
-          --df-messenger-button-titlebar-color: #0d6efd;
+          --df-messenger-bot-message: #ffffff;
+          --df-messenger-send-icon: #ffffff;
+          --df-messenger-user-message: #0d6efd;
           --df-messenger-font-color: #212529;
+          --df-messenger-chat-background: #f8f9fa;
+          --df-messenger-input-box-background: #ffffff;
         }
     </style>
 </head>
 <body>
 
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    
+    <div class="banner" id="welcome-banner">
+      <h2>Changemaker Dost</h2>
+    </div>
+
+    <div class="info">
+      <p style="font-size: 1.5rem; font-weight: 200;">I’m your Changemaker Dost.</p>
+      <p>You can ask me anything about Ashoka, or we can start your <br>Changemaker Index (CMI) assessment.</p>
+    </div>
+    
     <df-messenger
-      chat-title="Changemaker Dost"
+      chat-title=" "
       agent-id="37266707-5fe3-47f1-af94-aeb4f3768cf1"
       language-code="en"
       location="asia-south1"
@@ -39,8 +84,8 @@
 
     <script>
       const dfMessenger = document.querySelector('df-messenger');
+      const welcomeBanner = document.getElementById('welcome-banner');
 
-      // Function to get or create a persistent user ID from browser's local storage
       function getOrCreateUserId() {
           let userId = localStorage.getItem('changemakerDost_userId');
           if (!userId) {
@@ -50,26 +95,16 @@
           return userId;
       }
 
-      // This event fires once the Dialogflow Messenger widget is ready
       dfMessenger.addEventListener('df-messenger-loaded', function (event) {
-
-        // Set the persistent session ID
         const persistentUserId = getOrCreateUserId();
         dfMessenger.setAttribute('session-id', persistentUserId);
-        console.log('Persistent User ID set:', persistentUserId);
-
-        // Define the payload for the welcome card
+        
         const welcomePayload = [
-            {
-              "type": "info",
-              "title": "I’m your Changemaker Dost.",
-              "subtitle": "You can ask me anything about Ashoka, or we can start your CMI assessment.",
-            },
             {
               "type": "chips",
               "options": [
                 {
-                  "text": "Want to know about Ashoka young changemakers"
+                  "text": "Ashoka young changemakers program"
                 },
                 {
                   "text": "Start CMI assessment"
@@ -78,38 +113,86 @@
             }
           ];
 
-        // Use renderCustomCard to display our welcome message in a card
         dfMessenger.renderCustomCard(welcomePayload);
 
-        // --- NEW --- Apply custom styling to make the chat fullscreen
-        try {
+        // Hide the banner once the first response is received
+        dfMessenger.addEventListener('df-response-received', function() {
+            if (welcomeBanner) {
+                welcomeBanner.style.display = 'none';
+            }
+        });
+
             const dfChat = dfMessenger.shadowRoot.querySelector('df-messenger-chat');
             const style = document.createElement('style');
 
             style.textContent = `
-                /* The main chat window */
+                /* Make the main chat window fullscreen */
                 .chat-wrapper {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    height: 100% !important;
-                    width: 100% !important;
-                    max-height: 100vh !important;
-                    max-width: 100vw !important;
-                    border-radius: 0 !important;
-                    box-shadow: none !important;
+                    position: fixed; top: 0; left: 0;
+                    height: 100% !important; width: 100% !important;
+                    max-height: 100vh !important; max-width: 100vw !important;
+                    border-radius: 0 !important; box-shadow: none !important;
                 }
-                /* Hide the default launcher button */
-                #widgetIcon {
-                    display: none !important;
+                #widgetIcon { display: none !important; }
+                .header { display: none !important; }
+                
+                /* Better vertical centering for the initial view */
+                #messageList {
+                    padding-top: calc(50vh - 80px) !important; /* Adjust padding */
                 }
+
+                /* Style the welcome card container */
+                .card-frame {
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+                    border-radius: 12px !important;
+                    border: none !important;
+                    padding: 1.5rem !important;
+                    align: center;
+                    max-width: 450px;
+                    margin: 0 auto;
+                }
+
+                /* Style the suggestion chips */
+                .chip {
+                    background-color: #f1f3f5 !important;
+                    border: 1px solid #dee2e6 !important;
+                    border-radius: 20px !important;
+                    padding: 0.6rem 1rem !important;
+                    font-size: 0.9rem !important;
+                    color: #495057 !important;
+                }
+                
+                /* Style the input area */
+                df-messenger-user-input { padding: 1rem 1.5rem 2rem 1.5rem !important; }
+                #text-input-container { border: 1px solid #dee2e6; border-radius: 12px; padding: 0.25rem; }
+                #send-icon { background-color: #0d6efd !important; border-radius: 8px; padding: 8px; fill: white; }
+
+                /* --- NEW STYLES FOR CHAT ALIGNMENT --- */
+                
+                /* This is the container for all messages */
+                .message-list-wrapper {
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                /* Ensure user messages align to the right */
+                .message-list-wrapper > div.user-message {
+                    align-self: flex-end;
+                }
+
+                /* Ensure bot messages align to the left */
+                .message-list-wrapper > div.bot-message {
+                    align-self: flex-start;
+                }
+                
+                /* Constrain the width of message bubbles */
+                .user-message .message, .bot-message .message {
+                    max-width: 75%;
+                }
+
             `;
 
             dfChat.shadowRoot.appendChild(style);
-
-        } catch(e) {
-            console.error("Could not apply fullscreen styles:", e);
-        }
       });
     </script>
 
